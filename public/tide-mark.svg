@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" fill="none">
+  <!-- Shield outer shape -->
+  <path d="M100 6 L188 38 L188 110 C188 162 150 196 100 222 C50 196 12 162 12 110 L12 38 Z" fill="#E8521A"/>
+  <!-- White internal mark: horizontal bar (T crossbar) -->
+  <rect x="52" y="72" width="96" height="22" rx="11" fill="white"/>
+  <!-- White vertical stem going down, curves out at bottom like anchor/tide wave -->
+  <path d="M89 94 L89 130 C89 148 72 158 60 158 C52 158 46 154 46 148"
+        stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
+  <path d="M111 94 L111 130 C111 148 128 158 140 158 C148 158 154 154 154 148"
+        stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
+  <!-- Bottom connecting arc of anchor -->
+  <path d="M46 148 C46 148 56 170 100 170 C144 170 154 148 154 148"
+        stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
+</svg>
