@@ -3,55 +3,169 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --navy: #0D1F3C;
+    --navy-light: #1a3560;
+    --teal: #1D9E75;
+    --teal-dark: #167a5a;
+    --amber: #EF9F27;
+    --danger: #E24B4A;
+    --danger-dark: #9B1C1C;
+    --brand: #E8521A;
+    --surface: #F8F7F4;
+    --surface-2: #F0EEE9;
+    --border: #E4E2DD;
+  }
+
+  * { @apply box-border; }
+
+  html { @apply text-base antialiased; }
+
   body {
-    @apply bg-surface font-sans text-navy antialiased;
+    background-color: var(--surface);
+    color: var(--navy);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
   }
-  * {
-    @apply box-border;
-  }
+
+  /* Type scale: 12 / 14 / 16 / 18 / 24 / 32 */
+  h1 { @apply text-3xl font-bold tracking-tight; }
+  h2 { @apply text-2xl font-semibold tracking-tight; }
+  h3 { @apply text-lg font-semibold; }
+  h4 { @apply text-base font-semibold; }
 }
 
 @layer components {
+
+  /* ── Buttons ─────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium text-sm
+           transition-all duration-150 focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none
+           select-none cursor-pointer;
+    min-height: 40px;
+    padding: 0 16px;
   }
+  .btn-sm { min-height: 32px; padding: 0 12px; @apply text-xs; }
+  .btn-lg { min-height: 48px; padding: 0 24px; @apply text-base; }
+
   .btn-primary {
-    @apply btn bg-teal text-white hover:bg-teal-dark focus:ring-teal;
+    @apply btn bg-teal text-white hover:bg-teal-dark active:scale-[0.98] focus-visible:ring-teal;
   }
   .btn-secondary {
-    @apply btn bg-navy text-white hover:bg-navy-light focus:ring-navy;
+    @apply btn bg-navy text-white hover:bg-navy-light active:scale-[0.98] focus-visible:ring-navy;
   }
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-700 focus:ring-danger;
+    @apply btn bg-danger text-white hover:bg-red-600 active:scale-[0.98] focus-visible:ring-danger;
   }
   .btn-outline {
-    @apply btn border border-navy text-navy hover:bg-navy hover:text-white focus:ring-navy;
+    @apply btn border border-[var(--border)] bg-white text-navy hover:bg-[var(--surface-2)]
+           active:scale-[0.98] focus-visible:ring-navy;
   }
   .btn-ghost {
-    @apply btn text-navy hover:bg-gray-100 focus:ring-navy;
+    @apply btn text-navy hover:bg-[var(--surface-2)] active:scale-[0.98] focus-visible:ring-navy;
   }
+
+  /* ── Inputs ──────────────────────────────────── */
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal bg-white;
+    @apply w-full px-3 py-2.5 border border-[var(--border)] rounded-lg text-sm text-navy
+           bg-white placeholder:text-gray-400
+           focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal
+           transition-colors duration-150;
+    min-height: 44px;
+  }
+  .input-error {
+    @apply border-danger focus:ring-danger focus:border-danger;
   }
   .label {
-    @apply block text-sm font-medium text-navy mb-1;
+    @apply block text-sm font-medium text-navy mb-1.5;
   }
+  .helper-text {
+    @apply text-xs text-gray-500 mt-1;
+  }
+  .error-text {
+    @apply text-xs text-danger mt-1 flex items-center gap-1;
+  }
+
+  /* ── Cards ───────────────────────────────────── */
   .card {
-    @apply bg-white border border-gray-200 rounded-lg p-6;
+    @apply bg-white border border-[var(--border)] rounded-xl p-6;
   }
-  .table-header {
-    @apply px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider;
+  .card-sm {
+    @apply bg-white border border-[var(--border)] rounded-xl p-4;
   }
-  .table-cell {
-    @apply px-4 py-3 text-sm text-navy;
+
+  /* ── Tables ──────────────────────────────────── */
+  .th { @apply px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap; }
+  .td { @apply px-4 py-3 text-sm text-navy; }
+
+  /* ── Stat cards ──────────────────────────────── */
+  .stat-card {
+    @apply card flex items-start gap-4;
+  }
+  .stat-icon {
+    @apply h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0;
+  }
+
+  /* ── Nav items ───────────────────────────────── */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           transition-colors duration-150 cursor-pointer;
+  }
+  .nav-item-active {
+    @apply bg-white/15 text-white;
+  }
+  .nav-item-inactive {
+    @apply text-white/65 hover:bg-white/10 hover:text-white;
+  }
+
+  /* ── Mobile tap target ───────────────────────── */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* ── Section headers ─────────────────────────── */
+  .page-header {
+    @apply mb-8;
+  }
+  .page-title {
+    @apply text-2xl font-bold text-navy tracking-tight;
+  }
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  /* ── Dividers ────────────────────────────────── */
+  .divider {
+    @apply border-t border-[var(--border)];
+  }
+
+  /* ── Empty state ─────────────────────────────── */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
   }
 }
 
+/* ── Critical incident pulse ─────────────────── */
 .critical-pulse {
-  animation: pulse_border 1.5s ease-in-out infinite;
+  animation: critical-pulse 1.4s ease-in-out infinite;
+}
+@keyframes critical-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 28, 28, 0.6); }
+  50%       { box-shadow: 0 0 0 10px rgba(155, 28, 28, 0); }
 }
 
-@keyframes pulse_border {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 28, 28, 0.7); }
-  50% { box-shadow: 0 0 0 8px rgba(155, 28, 28, 0); }
+/* ── Skeleton shimmer ─────────────────────────── */
+.skeleton {
+  @apply bg-gray-200 rounded animate-pulse;
 }
+
+/* ── Sidebar width ───────────────────────────── */
+.sidebar-width { width: 256px; }
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-400; }

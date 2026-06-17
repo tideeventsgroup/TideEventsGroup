@@ -3,22 +3,22 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { Waves } from 'lucide-react'
+import { TideMark } from '../../components/ui/TideLogo'
 
 const schema = z.object({
-  email: z.string().email('Please enter a valid email'),
+  email: z.string().email('Enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
-
 type FormData = z.infer<typeof schema>
 
 export function Login() {
-  const { signIn, user } = useAuth()
-  const navigate = useNavigate()
+  const { signIn } = useAuth()
   const [authError, setAuthError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -27,56 +27,105 @@ export function Login() {
   async function onSubmit(data: FormData) {
     setAuthError(null)
     const { error } = await signIn(data.email, data.password)
-    if (error) {
-      setAuthError('Invalid email or password.')
-    }
-    // Navigation is handled by the auth state change in AuthContext + App.tsx
+    if (error) setAuthError('Incorrect email or password. Please try again.')
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-navy mb-4">
-            <Waves size={28} className="text-teal" />
+    <div className="min-h-screen bg-navy flex">
+      {/* Left panel — brand */}
+      <div className="hidden lg:flex flex-col justify-between w-[420px] flex-shrink-0 bg-navy-light p-12">
+        <div className="flex items-center gap-3">
+          <TideMark size={36} />
+          <div>
+            <div className="text-white font-bold text-lg leading-tight">Tide Events Group</div>
+            <div className="text-white/50 text-xs">Incident management system</div>
           </div>
-          <h1 className="text-2xl font-semibold text-navy">Tide IMS</h1>
-          <p className="text-sm text-gray-500 mt-1">Tide Events Group — incident management</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-base font-semibold text-navy mb-6">Sign in to your account</h2>
+        <div>
+          <blockquote className="text-white/80 text-lg font-medium leading-relaxed mb-4">
+            "Professional event safety management, from planning to post-event review."
+          </blockquote>
+          <p className="text-white/40 text-sm">Trusted by event organisers across Scotland.</p>
+        </div>
+
+        <div className="text-white/30 text-xs">
+          © {new Date().getFullYear()} Tide Events Group Ltd
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-surface">
+        <div className="w-full max-w-[400px]">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <TideMark size={32} />
+            <div>
+              <div className="text-navy font-bold text-base leading-tight">Tide Events Group</div>
+              <div className="text-gray-400 text-xs">Incident management system</div>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-navy">Sign in</h1>
+            <p className="text-gray-500 text-sm mt-1">Enter your credentials to access your portal</p>
+          </div>
 
           {authError && (
-            <div className="mb-4 px-3 py-2 bg-danger/10 border border-danger/20 rounded text-sm text-danger">
-              {authError}
+            <div className="mb-5 flex items-start gap-3 px-4 py-3 bg-danger-50 border border-danger/20 rounded-lg" role="alert">
+              <AlertCircle size={16} className="text-danger flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-danger">{authError}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <Input
               label="Email address"
               type="email"
               autoComplete="email"
+              inputMode="email"
               error={errors.email?.message}
+              placeholder="you@organisation.com"
               {...register('email')}
             />
-            <Input
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              error={errors.password?.message}
-              {...register('password')}
-            />
-            <Button type="submit" className="w-full" loading={isSubmitting}>
-              Sign in
+
+            <div className="w-full">
+              <label className="label">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  className={`input pr-11 ${errors.password ? 'input-error' : ''}`}
+                  aria-invalid={!!errors.password}
+                  placeholder="••••••••"
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition-colors tap-target"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="error-text" role="alert">
+                  <AlertCircle size={12} />
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full btn-lg mt-2" loading={isSubmitting}>
+              Sign in to your account
             </Button>
           </form>
-        </div>
 
-        <p className="text-xs text-center text-gray-400 mt-6">
-          Tide Events Group Ltd · Incident Management System
-        </p>
+          <p className="text-xs text-center text-gray-400 mt-8">
+            Need access? Contact your Tide Events Group consultant.
+          </p>
+        </div>
       </div>
     </div>
   )

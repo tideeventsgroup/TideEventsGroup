@@ -6,18 +6,23 @@ export function AppLayout() {
   const [online, setOnline] = useState(navigator.onLine)
 
   useEffect(() => {
-    const onOnline = () => setOnline(true)
-    const onOffline = () => setOnline(false)
-    window.addEventListener('online', onOnline)
-    window.addEventListener('offline', onOffline)
-    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline) }
+    const up = () => setOnline(true)
+    const down = () => setOnline(false)
+    window.addEventListener('online', up)
+    window.addEventListener('offline', down)
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
   }, [])
 
   return (
-    <div className="min-h-screen bg-surface max-w-sm mx-auto">
+    <div className="min-h-dvh bg-surface" style={{ maxWidth: 430, margin: '0 auto' }}>
       {!online && (
-        <div className="flex items-center justify-center gap-2 bg-amber/15 text-amber-800 text-xs py-2 px-4">
-          <WifiOff size={14} />
+        <div
+          className="flex items-center justify-center gap-2 text-xs py-2.5 px-4"
+          style={{ backgroundColor: '#FEF9EE', color: '#92400E', borderBottom: '1px solid #FDE68A' }}
+          role="status"
+          aria-live="polite"
+        >
+          <WifiOff size={13} />
           <span>Offline — incidents will sync when reconnected</span>
         </div>
       )}
