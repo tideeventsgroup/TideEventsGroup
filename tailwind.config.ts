@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         navy:    { DEFAULT: '#0D1F3C', light: '#1a3560', '50': '#EEF2F9' },
-        teal:    { DEFAULT: '#1D9E75', light: '#24c48f', dark: '#167a5a', '50': '#EDFAF4' },
+        teal:    { DEFAULT: '#E8521A', dark: '#C44415', light: '#F0A88A', '50': '#FEF0E8' },
         amber:   { DEFAULT: '#EF9F27', light: '#f5b84d', '50': '#FEF9EE' },
         danger:  { DEFAULT: '#E24B4A', dark: '#9B1C1C', '50': '#FEF0F0' },
         brand:   { DEFAULT: '#E8521A', light: '#F06432', dark: '#C94115' },

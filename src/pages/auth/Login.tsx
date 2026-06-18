@@ -7,7 +7,7 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { TideMark } from '../../components/ui/TideLogo'
+import { TideMark, TideLogo } from '../../components/ui/TideLogo'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -60,13 +60,8 @@ export function Login() {
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-6 bg-surface">
         <div className="w-full max-w-[400px]">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <TideMark size={32} />
-            <div>
-              <div className="text-navy font-bold text-base leading-tight">Tide Events Group</div>
-              <div className="text-gray-400 text-xs">Incident management system</div>
-            </div>
+          <div className="flex justify-center mb-8">
+            <TideLogo variant="full" markSize={48} />
           </div>
 
           <div className="mb-8">

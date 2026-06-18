@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Users, Truck, LogOut, Menu, X, CheckSquare, Calendar, ClipboardList } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Truck, LogOut, Menu, X, CheckSquare, Calendar, ClipboardList, Radio } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { TideMark } from '../ui/TideLogo'
 import { cn } from '../../lib/utils'
 
 const navItems = [
   { to: '/client', icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/client/live', icon: Radio, label: 'Live Dashboard' },
   { to: '/client/events', icon: Calendar, label: 'Events' },
   { to: '/client/documents', icon: FileText, label: 'Documents' },
   { to: '/client/staff', icon: Users, label: 'Staff' },
