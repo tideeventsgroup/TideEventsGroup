@@ -8,12 +8,11 @@ interface TideMarkProps {
 export function TideMark({ size = 32, className = '' }: TideMarkProps) {
   return (
     <img
-      src="/tide-mark.svg"
+      src="/tide-logo.svg"
       alt="Tide Events Group"
-      width={size}
       height={size}
       className={className}
-      style={{ display: 'inline-block', flexShrink: 0 }}
+      style={{ height: size, width: 'auto', display: 'inline-block', flexShrink: 0 }}
     />
   )
 }
