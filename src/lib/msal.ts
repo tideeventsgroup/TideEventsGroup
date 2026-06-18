@@ -28,21 +28,24 @@ async function ensureInitialised() {
 export async function signInWithMicrosoft(): Promise<AuthenticationResult> {
   await ensureInitialised()
 
+  const request = {
+    scopes: ['openid', 'profile', 'email'],
+    prompt: 'select_account' as const,
+  }
+
   try {
-    return await msalInstance.loginPopup({
-      scopes: ['openid', 'profile', 'email'],
-      prompt: 'select_account',
-    })
+    return await msalInstance.loginPopup(request)
   } catch (err) {
-    // Clear stale interaction lock and retry once
     if (err instanceof BrowserAuthError && err.errorCode === 'interaction_in_progress') {
       sessionStorage.clear()
-      await msalInstance.initialize()
-      initialised = true
-      return msalInstance.loginPopup({
-        scopes: ['openid', 'profile', 'email'],
-        prompt: 'select_account',
-      })
+      initialised = false
+      await ensureInitialised()
+      return msalInstance.loginPopup(request)
+    }
+    // Popup blocked — fall back to redirect
+    if (err instanceof BrowserAuthError && err.errorCode === 'popup_window_error') {
+      await msalInstance.loginRedirect(request)
+      return {} as AuthenticationResult // redirect will navigate away
     }
     throw err
   }
