@@ -2,8 +2,6 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import pool from '../db'
 
 const SCHEMA = `
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 CREATE TABLE IF NOT EXISTS tenants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -120,4 +118,32 @@ async function initDb(_req: HttpRequest, _ctx: InvocationContext): Promise<HttpR
   }
 }
 
-app.http('init-db', { methods: ['POST'], authLevel: 'anonymous', route: 'init', handler: initDb })
+async function seedAdmin(req: HttpRequest, _ctx: InvocationContext): Promise<HttpResponseInit> {
+  const secret = process.env.INIT_SECRET
+  if (!secret) return { status: 503, jsonBody: { error: 'Not enabled' } }
+  const authHeader = req.headers.get('x-init-secret')
+  if (authHeader !== secret) return { status: 401, jsonBody: { error: 'Forbidden' } }
+
+  const body = await req.json() as { email?: string; password?: string; name?: string }
+  if (!body.email || !body.password) return { status: 400, jsonBody: { error: 'email and password required' } }
+
+  const bcrypt = await import('bcryptjs')
+  const hash = await bcrypt.hash(body.password, 10)
+
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO users (email, name, role, password_hash)
+       VALUES ($1,$2,'super_admin',$3)
+       ON CONFLICT (email) DO UPDATE SET name=$2, role='super_admin', password_hash=$3
+       RETURNING id, email, name, role`,
+      [body.email, body.name ?? body.email, hash]
+    )
+    return { jsonBody: { ok: true, user: rows[0] } }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { status: 500, jsonBody: { error: message } }
+  }
+}
+
+app.http('init-db',      { methods: ['POST'], authLevel: 'anonymous', route: 'init',      handler: initDb   })
+app.http('init-seed',    { methods: ['POST'], authLevel: 'anonymous', route: 'init/seed', handler: seedAdmin })
