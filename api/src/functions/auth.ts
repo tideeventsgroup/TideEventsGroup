@@ -24,49 +24,59 @@ app.http('login', {
   }
 })
 
-app.http('login-microsoft', {
+app.http('login-microsoft-callback', {
   methods: ['POST'],
   authLevel: 'anonymous',
   route: 'auth/microsoft',
   handler: async (req: HttpRequest): Promise<HttpResponseInit> => {
     const tenantId = process.env.AZURE_AD_TENANT_ID
-    if (!tenantId) return { status: 503, jsonBody: { error: 'Microsoft SSO not configured' } }
+    const clientId = process.env.AZURE_AD_CLIENT_ID
+    if (!tenantId || !clientId) return { status: 503, jsonBody: { error: 'Microsoft SSO not configured' } }
 
-    const { idToken } = await req.json() as { idToken: string }
-    if (!idToken) return { status: 400, jsonBody: { error: 'idToken required' } }
+    const { code, codeVerifier, redirectUri } = await req.json() as { code: string; codeVerifier: string; redirectUri: string }
+    if (!code || !codeVerifier || !redirectUri) return { status: 400, jsonBody: { error: 'code, codeVerifier and redirectUri required' } }
 
     try {
+      // Exchange auth code for tokens
+      const tokenRes = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: redirectUri,
+          code_verifier: codeVerifier,
+          scope: 'openid profile email',
+        }).toString(),
+      })
+
+      const tokens = await tokenRes.json() as { id_token?: string; error?: string; error_description?: string }
+      if (!tokenRes.ok || !tokens.id_token) {
+        return { status: 401, jsonBody: { error: tokens.error_description ?? tokens.error ?? 'Token exchange failed' } }
+      }
+
+      // Validate the id_token
       const client = jwksClient({
         jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
-        cache: true,
-        cacheMaxEntries: 5,
-        cacheMaxAge: 600000,
+        cache: true, cacheMaxEntries: 5, cacheMaxAge: 600000,
       })
 
       const decoded = await new Promise<jwt.JwtPayload>((resolve, reject) => {
-        jwt.verify(idToken, (header, callback) => {
-          client.getSigningKey(header.kid, (err, key) => {
-            callback(err, key?.getPublicKey())
-          })
+        jwt.verify(tokens.id_token!, (header, callback) => {
+          client.getSigningKey(header.kid, (err, key) => callback(err, key?.getPublicKey()))
         }, { algorithms: ['RS256'] }, (err, payload) => {
-          if (err) reject(err)
-          else resolve(payload as jwt.JwtPayload)
+          if (err) reject(err); else resolve(payload as jwt.JwtPayload)
         })
       })
 
       const email = (decoded.preferred_username ?? decoded.email ?? decoded.upn ?? '').toLowerCase()
       if (!email) return { status: 401, jsonBody: { error: 'Could not determine email from Microsoft token' } }
 
-      const { rows } = await pool.query(
-        'SELECT id, email, name, role, tenant_id FROM users WHERE email = $1',
-        [email]
-      )
+      const { rows } = await pool.query('SELECT id, email, name, role, tenant_id FROM users WHERE email = $1', [email])
       const user = rows[0]
-
-      if (!user) return { status: 403, jsonBody: { error: 'No Tide IMS account found for this Microsoft account. Contact your administrator.' } }
-
-      const tideRoles = ['super_admin', 'tide_consultant']
-      if (!tideRoles.includes(user.role)) {
+      if (!user) return { status: 403, jsonBody: { error: 'No Tide IMS account found. Contact your administrator.' } }
+      if (!['super_admin', 'tide_consultant'].includes(user.role)) {
         return { status: 403, jsonBody: { error: 'Microsoft sign-in is only available for Tide employees.' } }
       }
 
@@ -74,7 +84,7 @@ app.http('login-microsoft', {
       return { jsonBody: { token, user } }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
-      return { status: 401, jsonBody: { error: `Microsoft token invalid: ${message}` } }
+      return { status: 401, jsonBody: { error: `Microsoft sign-in failed: ${message}` } }
     }
   }
 })
