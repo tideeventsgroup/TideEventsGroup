@@ -1,0 +1,13 @@
+// Single entry point — import all function registrations
+import './functions/auth'
+import './functions/tenants'
+import './functions/events'
+import './functions/users'
+import './functions/incidents'
+import './functions/documents'
+import './functions/compliance'
+import './functions/contractors'
+import './functions/audit'
+import './functions/stats'
+import './functions/realtime'
+import './functions/init'
