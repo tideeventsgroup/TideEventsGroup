@@ -58,11 +58,16 @@ export function Login() {
     setAuthError(null)
     setMsalLoading(true)
     try {
-      await signInWithMicrosoft()
-      // loginRedirect navigates away — no further action needed here
+      const result = await signInWithMicrosoft()
+      const { token, user: msUser } = await api.post<{ token: string; user: import('../../types').User }>('/auth/microsoft', {
+        idToken: result.idToken,
+      })
+      setAuthenticatedUser(token, msUser)
+      redirectForRole(msUser.role)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Microsoft sign-in failed'
       setAuthError(msg)
+    } finally {
       setMsalLoading(false)
     }
   }
