@@ -1,0 +1,8 @@
+config:
+  tide-ims:location: westeurope
+  azure-native:location: westeurope
+  tide-ims:dbPassword:
+    secure: v1:pXsMe1QpLs+AsXxx:OnVvyl06UyzWSRCNlJHOf1Yto8/eX77maxbT6I7lGAyqKhXCLg==
+  tide-ims:jwtSecret:
+    secure: v1:zYkB/dOJIVU8DoLl:RxZ0RuHyz6TXjrsZuSt1zJcieu7cp8TcZauJ5ZU4MoZ/jCigB1AZZcViaRFblzcOWbEeiDZhqXGF2m4ZxVXRcuJ7mygjy1kmeuoqh8JwR3Y=
+encryptionsalt: v1:zkZBCDOXqb0=:v1:rEQn6QHEKnXiReVx:4pCTBZ5UWihv5HzZbtmIlEp3tX4xhQ==
