@@ -9,35 +9,23 @@ const config: Configuration = {
   auth: {
     clientId: clientId ?? 'not-configured',
     authority: `https://login.microsoftonline.com/${tenantId ?? 'common'}`,
-    redirectUri: `${window.location.origin}/auth/callback`,
+    // Blank page — router won't intercept it, MSAL communicates result via BroadcastChannel
+    redirectUri: `${window.location.origin}/auth-redirect.html`,
   },
   cache: { cacheLocation: 'localStorage' },
 }
 
 let instance: PublicClientApplication | null = null
-let ready = false
 
 async function getInstance(): Promise<PublicClientApplication> {
-  if (!instance) instance = new PublicClientApplication(config)
-  if (!ready) {
+  if (!instance) {
+    instance = new PublicClientApplication(config)
     await instance.initialize()
-    ready = true
   }
   return instance
 }
 
-function clearInteractionLock() {
-  // Only remove MSAL's interaction-in-progress lock, nothing else
-  Object.keys(sessionStorage)
-    .filter(k => k.includes('interaction.status'))
-    .forEach(k => sessionStorage.removeItem(k))
-  Object.keys(localStorage)
-    .filter(k => k.includes('interaction.status'))
-    .forEach(k => localStorage.removeItem(k))
-}
-
 export async function signInWithMicrosoft(): Promise<AuthenticationResult> {
-  clearInteractionLock()
   const msal = await getInstance()
   return msal.loginPopup({
     scopes: ['openid', 'profile', 'email'],
