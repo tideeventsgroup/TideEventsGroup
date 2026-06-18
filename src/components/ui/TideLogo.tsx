@@ -47,10 +47,10 @@ export function TideLogo({ variant = 'full', className = '', markSize = 32, heig
   if (variant === 'full-black') {
     return (
       <img
-        src="/logo-white.png"
+        src="/tide-logo.svg"
         alt="Tide Events Group"
         height={h}
-        style={{ height: h, width: 'auto', display: 'inline-block', filter: 'invert(1)' }}
+        style={{ height: h, width: 'auto', display: 'inline-block' }}
         className={className}
       />
     )
