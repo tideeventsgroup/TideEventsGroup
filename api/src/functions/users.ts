@@ -1,5 +1,5 @@
 import { app, HttpRequest } from '@azure/functions'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import pool from '../db'
 import { getAuth } from '../auth'
 
