@@ -33,31 +33,10 @@ app.http('login-microsoft', {
     const clientId = process.env.AZURE_AD_CLIENT_ID
     if (!tenantId || !clientId) return { status: 503, jsonBody: { error: 'Microsoft SSO not configured' } }
 
-    const { code, codeVerifier, redirectUri } = await req.json() as { code: string; codeVerifier: string; redirectUri: string }
-    if (!code || !codeVerifier || !redirectUri) {
-      return { status: 400, jsonBody: { error: 'code, codeVerifier and redirectUri are required' } }
-    }
+    const { idToken } = await req.json() as { idToken: string }
+    if (!idToken) return { status: 400, jsonBody: { error: 'idToken is required' } }
 
     try {
-      // Exchange authorisation code for tokens
-      const tokenRes = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: clientId,
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: redirectUri,
-          code_verifier: codeVerifier,
-          scope: 'openid profile email',
-        }).toString(),
-      })
-
-      const tokens = await tokenRes.json() as { id_token?: string; error?: string; error_description?: string }
-      if (!tokenRes.ok || !tokens.id_token) {
-        return { status: 401, jsonBody: { error: tokens.error_description ?? tokens.error ?? 'Token exchange failed' } }
-      }
-
       // Validate id_token signature via Microsoft's public JWKS
       const client = jwksClient({
         jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
@@ -68,7 +47,7 @@ app.http('login-microsoft', {
 
       const decoded = await new Promise<jwt.JwtPayload>((resolve, reject) => {
         jwt.verify(
-          tokens.id_token!,
+          idToken,
           (header, callback) => {
             client.getSigningKey(header.kid, (err, key) => callback(err, key?.getPublicKey()))
           },
