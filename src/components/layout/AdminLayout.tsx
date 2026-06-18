@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Building2, Users, ClipboardList, LogOut, Menu, X, UserCheck } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, ClipboardList, LogOut, Menu, X, UserCheck, AlertTriangle, FileBarChart } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { DashboardSwitcher } from '../shared/DashboardSwitcher'
 
 const navItems = [
   { to: '/admin',             icon: LayoutDashboard, label: 'Dashboard',   end: true },
   { to: '/admin/clients',     icon: Building2,       label: 'Clients' },
   { to: '/admin/users',       icon: Users,           label: 'Users' },
   { to: '/admin/consultants', icon: UserCheck,       label: 'Consultants' },
+  { to: '/admin/incidents',   icon: AlertTriangle,   label: 'Incidents' },
+  { to: '/admin/reports',     icon: FileBarChart,    label: 'Reports' },
   { to: '/admin/audit',       icon: ClipboardList,   label: 'Audit log' },
 ]
 
@@ -37,8 +40,13 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
+      {/* Dashboard switcher */}
+      <div className="pt-3">
+        <DashboardSwitcher />
+      </div>
+
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5" role="navigation" aria-label="Main navigation">
+      <nav className="flex-1 px-3 py-1 space-y-0.5" role="navigation" aria-label="Main navigation">
         {navItems.map(item => (
           <NavLink
             key={item.to}

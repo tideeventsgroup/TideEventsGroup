@@ -20,6 +20,9 @@ import { TenantDetail } from './pages/admin/TenantDetail'
 import { AdminUsers } from './pages/admin/Users'
 import { AdminAuditLog } from './pages/admin/AuditLog'
 import { ConsultantAssignments } from './pages/admin/ConsultantAssignments'
+import { AdminIncidents } from './pages/admin/Incidents'
+import { IncidentDetail } from './pages/admin/IncidentDetail'
+import { Reports } from './pages/admin/Reports'
 
 // Client
 import { ClientDashboard } from './pages/client/Dashboard'
@@ -98,6 +101,9 @@ export default function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="audit" element={<AdminAuditLog />} />
               <Route path="consultants" element={<ConsultantAssignments />} />
+              <Route path="incidents" element={<AdminIncidents />} />
+              <Route path="incidents/:id" element={<IncidentDetail />} />
+              <Route path="reports" element={<Reports />} />
             </Route>
 
             {/* Client portal */}
