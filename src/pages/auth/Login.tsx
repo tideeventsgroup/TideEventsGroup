@@ -39,8 +39,8 @@ export function Login() {
 
   function redirectForRole(role: string) {
     if (role === 'super_admin') navigate('/admin', { replace: true })
-    else if (role === 'client_staff') navigate('/app/select-event', { replace: true })
-    else navigate('/client', { replace: true })
+    else if (role === 'client_staff' || role === 'event_staff') navigate('/app/select-event', { replace: true })
+    else navigate('/mode-select', { replace: true })
   }
 
   async function onSubmit(data: FormData) {
@@ -88,7 +88,7 @@ export function Login() {
             <div className="inline-flex items-center gap-2 mb-5">
               <span className="h-1 w-8 rounded-full" style={{ background: '#E8521A' }} />
               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#E8521A' }}>
-                Incident Management System
+                Tactical Incident &amp; Dispatch Environment
               </span>
             </div>
             <h1 className="text-3xl font-bold text-navy leading-tight">Welcome back</h1>

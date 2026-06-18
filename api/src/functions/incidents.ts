@@ -9,7 +9,16 @@ function getPubSub() {
   return new WebPubSubServiceClient(cs, 'incidents')
 }
 
-// GET /incidents — supports ?event_id, ?tenant_id, ?severity, ?status, ?search, ?limit
+async function nextCadNumber(eventId: string): Promise<string> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) FROM incidents WHERE event_id = $1`, [eventId]
+  )
+  const n = parseInt(rows[0].count) + 1
+  const year = new Date().getFullYear()
+  return `TIDE-${year}-${String(n).padStart(4, '0')}`
+}
+
+// GET /incidents
 app.http('incidents-list', {
   methods: ['GET'], authLevel: 'anonymous', route: 'incidents',
   handler: async (req) => {
@@ -18,7 +27,8 @@ app.http('incidents-list', {
       const sp       = new URL(req.url).searchParams
       const eventId  = sp.get('event_id')
       const tenantId = sp.get('tenant_id')
-      const severity = sp.get('severity')
+      const priority = sp.get('priority')
+      const category = sp.get('category')
       const status   = sp.get('status')
       const search   = sp.get('search')
       const limit    = Math.min(parseInt(sp.get('limit') ?? '200', 10), 500)
@@ -39,14 +49,15 @@ app.http('incidents-list', {
       const params: unknown[] = []
       if (eventId)  { params.push(eventId);  query += ` AND i.event_id  = $${params.length}` }
       if (tenantId) { params.push(tenantId); query += ` AND i.tenant_id = $${params.length}` }
-      if (severity) { params.push(severity); query += ` AND i.severity  = $${params.length}` }
+      if (priority) { params.push(priority); query += ` AND i.priority  = $${params.length}` }
+      if (category) { params.push(category); query += ` AND i.category  = $${params.length}` }
       if (status)   { params.push(status);   query += ` AND i.status    = $${params.length}` }
-      if (search)   {
+      if (search) {
         params.push(`%${search}%`)
-        query += ` AND (i.reference_number ILIKE $${params.length} OR i.description ILIKE $${params.length} OR i.location_zone ILIKE $${params.length} OR e.name ILIKE $${params.length} OR t.name ILIKE $${params.length})`
+        query += ` AND (i.cad_number ILIKE $${params.length} OR i.description ILIKE $${params.length} OR i.location_zone ILIKE $${params.length} OR i.incident_type ILIKE $${params.length})`
       }
       params.push(limit)
-      query += ` ORDER BY i.created_at DESC LIMIT $${params.length}`
+      query += ` ORDER BY CASE i.priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 WHEN 'P3' THEN 3 WHEN 'P4' THEN 4 ELSE 5 END, i.created_at DESC LIMIT $${params.length}`
       const { rows } = await pool.query(query, params)
       return { jsonBody: rows }
     } catch (e: any) { return { status: 401, jsonBody: { error: e.message } } }
@@ -73,7 +84,13 @@ app.http('incidents-get', {
         WHERE i.id = $1
       `, [req.params.id])
       if (!rows[0]) return { status: 404, jsonBody: { error: 'Not found' } }
-      return { jsonBody: rows[0] }
+
+      // Also fetch actions
+      const { rows: actions } = await pool.query(
+        `SELECT ia.*, u.name AS performed_by_name FROM incident_actions ia LEFT JOIN users u ON u.id = ia.performed_by WHERE ia.incident_id = $1 ORDER BY ia.created_at ASC`,
+        [req.params.id]
+      )
+      return { jsonBody: { ...rows[0], actions } }
     } catch (e: any) { return { status: 500, jsonBody: { error: e.message } } }
   }
 })
@@ -85,14 +102,26 @@ app.http('incidents-create', {
     try {
       const auth = getAuth(req)
       const body = await req.json() as Record<string, unknown>
-      const ref = 'INC-' + Date.now().toString(36).toUpperCase()
+      const cadNumber = await nextCadNumber(body.event_id as string)
       const { rows } = await pool.query(
-        `INSERT INTO incidents (event_id, tenant_id, category, severity, description, location_zone, location_lat, location_lng, photo_url, status, logged_by, reference_number)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'logged',$10,$11) RETURNING *`,
-        [body.event_id, body.tenant_id, body.category, body.severity, body.description,
-         body.location_zone, body.location_lat, body.location_lng, body.photo_url, auth.userId, ref]
+        `INSERT INTO incidents (event_id, tenant_id, cad_number, priority, category, incident_type, severity, description, location_zone, location_lat, location_lng, photo_url, status, logged_by, reference_number)
+         VALUES ($1,$2,$3,COALESCE($4,'P3'),$5,$6,$7,$8,$9,$10,$11,$12,'new',$13,$3) RETURNING *`,
+        [body.event_id, body.tenant_id, cadNumber, body.priority, body.category, body.incident_type,
+         body.severity, body.description, body.location_zone, body.location_lat, body.location_lng,
+         body.photo_url, auth.userId]
       )
       const incident = rows[0]
+      // Log creation action
+      const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [auth.userId])
+      await pool.query(
+        `INSERT INTO incident_actions (incident_id, action_type, note, performed_by, performed_by_name) VALUES ($1,'created','Incident created',$2,$3)`,
+        [incident.id, auth.userId, userRes.rows[0]?.name]
+      )
+      // Audit
+      await pool.query(
+        `INSERT INTO audit_log (tenant_id, user_id, user_name, action, entity_type, entity_id, new_value) VALUES ($1,$2,$3,'incident.created','incident',$4,$5)`,
+        [body.tenant_id, auth.userId, userRes.rows[0]?.name, incident.id, JSON.stringify(incident)]
+      )
       const pubsub = getPubSub()
       if (pubsub) await pubsub.sendToAll({ type: 'incident.created', data: incident }).catch(() => {})
       return { status: 201, jsonBody: incident }
@@ -100,33 +129,71 @@ app.http('incidents-create', {
   }
 })
 
-// PATCH /incidents/:id — update status, assigned_to, severity, category, description, resolution_notes
+// PATCH /incidents/:id
 app.http('incidents-update', {
   methods: ['PATCH'], authLevel: 'anonymous', route: 'incidents/{id}',
   handler: async (req) => {
     try {
-      getAuth(req)
+      const auth = getAuth(req)
       const body = await req.json() as Record<string, unknown>
-      const { status, assigned_to, severity, category, description, resolution_notes } = body as {
-        status?: string; assigned_to?: string; severity?: string; category?: string;
-        description?: string; resolution_notes?: string
+      const { status, assigned_to, priority, category, incident_type, severity, description, resolution_notes, location_zone } = body as {
+        status?: string; assigned_to?: string; priority?: string; category?: string;
+        incident_type?: string; severity?: string; description?: string;
+        resolution_notes?: string; location_zone?: string
       }
+
+      const { rows: old } = await pool.query('SELECT * FROM incidents WHERE id=$1', [req.params.id])
+      if (!old[0]) return { status: 404, jsonBody: { error: 'Not found' } }
+
       const { rows } = await pool.query(
         `UPDATE incidents SET
            status           = COALESCE($2, status),
            assigned_to      = COALESCE($3, assigned_to),
-           severity         = COALESCE($4, severity),
+           priority         = COALESCE($4, priority),
            category         = COALESCE($5, category),
-           description      = COALESCE($6, description),
-           resolution_notes = COALESCE($7, resolution_notes),
-           resolved_at      = CASE WHEN $2 = 'resolved' THEN NOW() ELSE resolved_at END
+           incident_type    = COALESCE($6, incident_type),
+           severity         = COALESCE($7, severity),
+           description      = COALESCE($8, description),
+           resolution_notes = COALESCE($9, resolution_notes),
+           location_zone    = COALESCE($10, location_zone),
+           updated_at       = NOW(),
+           resolved_at      = CASE WHEN $2 = 'resolved' AND resolved_at IS NULL THEN NOW() ELSE resolved_at END,
+           closed_at        = CASE WHEN $2 = 'closed' AND closed_at IS NULL THEN NOW() ELSE closed_at END
          WHERE id = $1 RETURNING *`,
-        [req.params.id, status, assigned_to, severity, category, description, resolution_notes]
+        [req.params.id, status, assigned_to, priority, category, incident_type, severity, description, resolution_notes, location_zone]
       )
       const incident = rows[0]
+
+      // Log the status change action
+      if (status && status !== old[0].status) {
+        const userRes = await pool.query('SELECT name FROM users WHERE id=$1', [auth.userId])
+        const actionNote = `Status changed: ${old[0].status} → ${status}`
+        await pool.query(
+          `INSERT INTO incident_actions (incident_id, action_type, note, performed_by, performed_by_name) VALUES ($1,'status_change',$2,$3,$4)`,
+          [incident.id, actionNote, auth.userId, userRes.rows[0]?.name]
+        )
+      }
+
       const pubsub = getPubSub()
       if (pubsub) await pubsub.sendToAll({ type: 'incident.updated', data: incident }).catch(() => {})
       return { jsonBody: incident }
+    } catch (e: any) { return { status: 500, jsonBody: { error: e.message } } }
+  }
+})
+
+// POST /incidents/:id/actions
+app.http('incidents-add-action', {
+  methods: ['POST'], authLevel: 'anonymous', route: 'incidents/{id}/actions',
+  handler: async (req) => {
+    try {
+      const auth = getAuth(req)
+      const body = await req.json() as Record<string, unknown>
+      const userRes = await pool.query('SELECT name FROM users WHERE id=$1', [auth.userId])
+      const { rows } = await pool.query(
+        `INSERT INTO incident_actions (incident_id, action_type, note, performed_by, performed_by_name) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+        [req.params.id, body.action_type ?? 'update', body.note, auth.userId, userRes.rows[0]?.name]
+      )
+      return { status: 201, jsonBody: rows[0] }
     } catch (e: any) { return { status: 500, jsonBody: { error: e.message } } }
   }
 })
