@@ -19,6 +19,7 @@ import { AdminTenants } from './pages/admin/Tenants'
 import { TenantDetail } from './pages/admin/TenantDetail'
 import { AdminUsers } from './pages/admin/Users'
 import { AdminAuditLog } from './pages/admin/AuditLog'
+import { ConsultantAssignments } from './pages/admin/ConsultantAssignments'
 
 // Client
 import { ClientDashboard } from './pages/client/Dashboard'
@@ -28,6 +29,10 @@ import { StaffManagement } from './pages/client/StaffManagement'
 import { Compliance } from './pages/client/Compliance'
 import { Events } from './pages/client/Events'
 import { LiveEventDashboard } from './pages/client/LiveEventDashboard'
+import { RiskAssessment } from './pages/client/RiskAssessment'
+import { Training } from './pages/client/Training'
+import { EventDetail } from './pages/client/EventDetail'
+import { PostEventReport } from './pages/client/PostEventReport'
 
 // App / PWA
 import { SelectEvent } from './pages/app/SelectEvent'
@@ -92,6 +97,7 @@ export default function App() {
               <Route path="clients/:id" element={<TenantDetail />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="audit" element={<AdminAuditLog />} />
+              <Route path="consultants" element={<ConsultantAssignments />} />
             </Route>
 
             {/* Client portal */}
@@ -103,9 +109,13 @@ export default function App() {
               <Route index element={<ClientDashboard />} />
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="events" element={<Events />} />
+              <Route path="events/:id" element={<EventDetail />} />
+              <Route path="events/:id/report" element={<PostEventReport />} />
               <Route path="documents" element={<DocumentVault />} />
               <Route path="staff" element={<StaffManagement />} />
               <Route path="compliance" element={<Compliance />} />
+              <Route path="risks" element={<RiskAssessment />} />
+              <Route path="training" element={<Training />} />
               <Route path="live" element={<LiveEventDashboard />} />
             </Route>
 

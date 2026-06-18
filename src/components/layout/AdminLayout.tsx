@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Building2, Users, ClipboardList, LogOut, Menu, X, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, ClipboardList, LogOut, Menu, X, UserCheck } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { cn } from '../../lib/utils'
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/admin/clients', icon: Building2, label: 'Clients' },
   { to: '/admin/users', icon: Users, label: 'Users' },
+  { to: '/admin/consultants', icon: UserCheck, label: 'Consultants' },
   { to: '/admin/audit', icon: ClipboardList, label: 'Audit log' },
 ]
 

@@ -29,3 +29,25 @@ app.http('documents-create', {
     } catch (e: any) { return { status: 500, jsonBody: { error: e.message } } }
   }
 })
+
+app.http('documents-update', {
+  methods: ['PATCH'], authLevel: 'anonymous', route: 'documents/{id}',
+  handler: async (req) => {
+    try {
+      const auth = getAuth(req)
+      const { id } = req.params
+      const body = await req.json() as Record<string, unknown>
+      const { rows } = await pool.query(
+        `UPDATE documents SET
+          status = COALESCE($2, status),
+          title = COALESCE($3, title),
+          content_json = COALESCE($4, content_json),
+          updated_at = NOW()
+        WHERE id = $1 RETURNING *`,
+        [id, body.status ?? null, body.title ?? null, body.content_json ?? null]
+      )
+      if (!rows.length) return { status: 404, jsonBody: { error: 'Not found' } }
+      return { jsonBody: rows[0] }
+    } catch (e: any) { return { status: 401, jsonBody: { error: e.message } } }
+  }
+})

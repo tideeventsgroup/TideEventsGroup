@@ -1,13 +1,79 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, AlertTriangle, ChevronDown, ChevronUp, Plus, Clock } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
 import { ConfirmModal } from '../../components/shared/ConfirmModal'
 import { StatusBadge } from '../../components/ui/Badge'
 import { formatDateTime } from '../../lib/utils'
 import type { Incident, Event } from '../../types'
+
+interface IncidentAction {
+  id: string
+  incident_id: string
+  action_text: string
+  performed_by: string
+  performed_at: string
+  actor_name?: string
+}
+
+function ActionPanel({ incidentId }: { incidentId: string }) {
+  const qc = useQueryClient()
+  const [text, setText] = useState('')
+
+  const { data: actions = [] } = useQuery<IncidentAction[]>({
+    queryKey: ['incident-actions', incidentId],
+    queryFn: () => api.get<IncidentAction[]>(`/incident-actions?incident_id=${incidentId}`),
+  })
+
+  const logAction = useMutation({
+    mutationFn: () => api.post('/incident-actions', { incident_id: incidentId, action_text: text }),
+    onSuccess: () => {
+      setText('')
+      qc.invalidateQueries({ queryKey: ['incident-actions', incidentId] })
+    },
+  })
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Action log</h4>
+      {actions.length === 0 ? (
+        <p className="text-xs text-gray-400 mb-3">No actions logged yet.</p>
+      ) : (
+        <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+          {[...actions].sort((a, b) => new Date(a.performed_at).getTime() - new Date(b.performed_at).getTime()).map(a => (
+            <div key={a.id} className="flex gap-2 text-xs">
+              <Clock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="text-gray-400">{formatDateTime(a.performed_at)}</span>
+                {a.actor_name && <span className="text-navy font-medium ml-1">{a.actor_name}</span>}
+                <p className="text-gray-700">{a.action_text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="Log an action..."
+          className="input-field flex-1 text-xs py-1.5"
+          onKeyDown={e => { if (e.key === 'Enter' && text.trim()) logAction.mutate() }}
+        />
+        <button
+          onClick={() => logAction.mutate()}
+          disabled={!text.trim() || logAction.isPending}
+          className="btn btn-primary btn-sm flex items-center gap-1"
+        >
+          <Plus size={12} />
+          Log
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function useLiveClock() {
   const [now, setNow] = useState(new Date())
@@ -52,6 +118,7 @@ export function LiveEventDashboard() {
   const eventName = localStorage.getItem('tide_event_name') ?? 'Live Event'
 
   const [declareOpen, setDeclareOpen] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { data: incidents = [] } = useQuery<Incident[]>({
     queryKey: ['incidents', eventId],
@@ -187,24 +254,31 @@ export function LiveEventDashboard() {
                   key={incident.id}
                   className={`bg-white rounded-lg px-4 py-3 shadow-sm ${severityBorderClass(incident.severity)}`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono text-gray-400">{incident.reference_number ?? '—'}</span>
-                        {incident.severity && (
-                          <StatusBadge status={incident.severity} />
+                  <button
+                    className="w-full text-left"
+                    onClick={() => setExpandedId(expandedId === incident.id ? null : incident.id)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono text-gray-400">{incident.reference_number ?? '—'}</span>
+                          {incident.severity && (
+                            <StatusBadge status={incident.severity} />
+                          )}
+                          <span className="text-xs text-gray-500 capitalize">{incident.category?.replace(/_/g, ' ')}</span>
+                        </div>
+                        {incident.location_zone && (
+                          <p className="text-xs text-gray-400 mt-0.5">{incident.location_zone}</p>
                         )}
-                        <span className="text-xs text-gray-500 capitalize">{incident.category?.replace(/_/g, ' ')}</span>
                       </div>
-                      {incident.location_zone && (
-                        <p className="text-xs text-gray-400 mt-0.5">{incident.location_zone}</p>
-                      )}
+                      <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                        <StatusBadge status={incident.status} />
+                        <span className="text-2xs text-gray-400">{formatDateTime(incident.created_at)}</span>
+                        {expandedId === incident.id ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                      </div>
                     </div>
-                    <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                      <StatusBadge status={incident.status} />
-                      <span className="text-2xs text-gray-400">{formatDateTime(incident.created_at)}</span>
-                    </div>
-                  </div>
+                  </button>
+                  {expandedId === incident.id && <ActionPanel incidentId={incident.id} />}
                 </div>
               ))
           )}
