@@ -8,9 +8,10 @@ interface AuthCtx {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  setAuthenticatedUser: (token: string, user: User) => void
 }
 
-const AuthContext = createContext<AuthCtx>({ user: null, loading: true, signIn: async () => {}, signOut: async () => {} })
+const AuthContext = createContext<AuthCtx>({ user: null, loading: true, signIn: async () => {}, signOut: async () => {}, setAuthenticatedUser: () => {} })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -51,7 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, loading, signIn, signOut }}>{children}</AuthContext.Provider>
+  function setAuthenticatedUser(token: string, user: User) {
+    localStorage.setItem('tide_token', token)
+    setUser(user)
+  }
+
+  return <AuthContext.Provider value={{ user, loading, signIn, signOut, setAuthenticatedUser }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() { return useContext(AuthContext) }

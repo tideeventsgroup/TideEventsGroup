@@ -11,6 +11,7 @@ import { AppLayout } from './components/layout/AppLayout'
 
 // Auth
 import { Login } from './pages/auth/Login'
+import { MicrosoftCallback } from './pages/auth/MicrosoftCallback'
 
 // Admin
 import { AdminDashboard } from './pages/admin/Dashboard'
@@ -77,7 +78,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<AuthRedirect />} />
-<Route path="/" element={<RootRedirect />} />
+            <Route path="/auth/callback" element={<MicrosoftCallback />} />
+            <Route path="/" element={<RootRedirect />} />
 
             {/* Super admin */}
             <Route path="/admin" element={
