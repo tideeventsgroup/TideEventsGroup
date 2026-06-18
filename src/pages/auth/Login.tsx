@@ -57,7 +57,7 @@ export function Login() {
       <div className="flex-1 flex items-center justify-center p-6 bg-surface">
         <div className="w-full max-w-[400px]">
           <div className="flex justify-center mb-8">
-            <TideLogo variant="full" height={52} />
+            <TideLogo variant="full-black" height={52} />
           </div>
 
           <div className="mb-8">
