@@ -22,34 +22,33 @@ interface TideLogoProps {
   variant?: 'mark' | 'full' | 'full-white'
   className?: string
   markSize?: number
+  height?: number
 }
 
-export function TideLogo({ variant = 'full', className = '', markSize = 32 }: TideLogoProps) {
-  const textColor = variant === 'full-white' ? 'text-white' : 'text-navy'
-
+export function TideLogo({ variant = 'full', className = '', markSize = 32, height }: TideLogoProps) {
   if (variant === 'mark') {
     return <TideMark size={markSize} className={className} />
   }
 
+  if (variant === 'full-white') {
+    return (
+      <img
+        src="/logo-white.png"
+        alt="Tide Events Group"
+        height={height ?? markSize}
+        style={{ height: height ?? markSize, width: 'auto', display: 'inline-block' }}
+        className={className}
+      />
+    )
+  }
+
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <TideMark size={markSize} />
-      <div>
-        <div
-          className={`font-bold leading-tight tracking-tight ${textColor}`}
-          style={{ fontSize: markSize * 0.56 }}
-        >
-          Tide Events Group
-        </div>
-        {markSize >= 36 && (
-          <div
-            className={`leading-none ${variant === 'full-white' ? 'text-white/60' : 'text-gray-400'}`}
-            style={{ fontSize: markSize * 0.28 }}
-          >
-            Incident management system
-          </div>
-        )}
-      </div>
-    </div>
+    <img
+      src="/tide-logo.svg"
+      alt="Tide Events Group"
+      height={height ?? markSize}
+      style={{ height: height ?? markSize, width: 'auto', display: 'inline-block' }}
+      className={className}
+    />
   )
 }

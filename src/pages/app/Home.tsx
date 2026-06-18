@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BookOpen, Map, Phone, List } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { TideMark } from '../../components/ui/TideLogo'
+import { TideLogo } from '../../components/ui/TideLogo'
 
 const ACTIONS = [
   {
@@ -70,9 +70,7 @@ export function AppHome() {
 
       {/* Brand lockup */}
       <div className="flex flex-col items-center py-8">
-        <TideMark size={64} />
-        <h1 className="text-xl font-bold text-navy mt-4 tracking-tight">Tide Events Group</h1>
-        <p className="text-xs text-gray-400 mt-1">Incident management system</p>
+        <TideLogo variant="full" height={56} />
       </div>
 
       {/* Action grid */}

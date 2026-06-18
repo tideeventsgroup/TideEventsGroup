@@ -5,13 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy:    { DEFAULT: '#0D1F3C', light: '#1a3560', '50': '#EEF2F9' },
+        navy:    { DEFAULT: '#111111', light: '#2a2a2a', '50': '#F2F2F2' },
         teal:    { DEFAULT: '#E8521A', dark: '#C44415', light: '#F0A88A', '50': '#FEF0E8' },
         amber:   { DEFAULT: '#EF9F27', light: '#f5b84d', '50': '#FEF9EE' },
         danger:  { DEFAULT: '#E24B4A', dark: '#9B1C1C', '50': '#FEF0F0' },
         brand:   { DEFAULT: '#E8521A', light: '#F06432', dark: '#C94115' },
-        surface: { DEFAULT: '#F8F7F4', '2': '#F0EEE9' },
-        border:  { DEFAULT: '#E4E2DD' },
+        surface: { DEFAULT: '#F5F5F5', '2': '#E8E8E8' },
+        border:  { DEFAULT: '#D1D1D1' },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

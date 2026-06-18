@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, FileText, Users, Truck, LogOut, Menu, X, CheckSquare, Calendar, ClipboardList, Radio } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { TideMark } from '../ui/TideLogo'
+import { TideLogo } from '../ui/TideLogo'
 import { cn } from '../../lib/utils'
 
 const navItems = [
@@ -28,11 +28,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full bg-navy" style={{ width: 256 }}>
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <TideMark size={28} />
-          <div>
-            <div className="text-white font-semibold text-sm leading-tight">Tide IMS</div>
-            <div className="text-white/40 text-xs">Client portal</div>
-          </div>
+          <TideLogo variant="full-white" height={32} />
         </div>
         {onClose && (
           <button onClick={onClose} className="text-white/50 hover:text-white tap-target">
@@ -103,8 +99,7 @@ export function ClientLayout() {
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-2">
-            <TideMark size={22} />
-            <span className="text-white font-semibold text-sm">Tide IMS</span>
+            <TideLogo variant="full-white" height={24} />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto">
