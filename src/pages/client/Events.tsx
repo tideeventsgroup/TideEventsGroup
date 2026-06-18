@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Calendar } from 'lucide-react'
+import { Plus, Calendar, Radio } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -37,7 +38,14 @@ const eventTypeOptions = [
 export function Events() {
   const { user } = useAuth()
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const [addOpen, setAddOpen] = useState(false)
+
+  function goLive(event: Event) {
+    localStorage.setItem('tide_event_id', event.id)
+    localStorage.setItem('tide_event_name', event.name)
+    navigate('/client/live')
+  }
 
   const { data: events = [] } = useQuery({
     queryKey: ['events', user?.tenant_id],
@@ -90,7 +98,23 @@ export function Events() {
               return d < 0 ? 'Passed' : d === 0 ? 'Today' : `${d} days`
             }
           },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status as string} /> },
+          {
+            key: 'status', header: 'Status',
+            render: (row) => (
+              <div className="flex items-center gap-2">
+                <StatusBadge status={row.status as string} />
+                {row.status === 'live' && (
+                  <button
+                    onClick={() => goLive(row as unknown as Event)}
+                    className="btn btn-sm bg-red-600 text-white hover:bg-red-700 gap-1"
+                  >
+                    <Radio size={12} />
+                    Live Dashboard →
+                  </button>
+                )}
+              </div>
+            )
+          },
         ]}
         searchable
         searchKeys={['name', 'venue_name'] as never}
