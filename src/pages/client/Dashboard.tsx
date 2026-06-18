@@ -2,7 +2,7 @@ import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, CheckCircle, User, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { StatusBadge } from '../../components/ui/Badge'
 import { formatDate, daysUntil } from '../../lib/utils'
@@ -46,8 +46,7 @@ export function ClientDashboard() {
     queryKey: ['client-events', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('events').select('*').eq('tenant_id', user!.tenant_id!).order('start_date')
-      return (data ?? []) as Event[]
+      return api.get<Event[]>(`/events?tenant_id=${user!.tenant_id!}`)
     }
   })
 
@@ -55,8 +54,7 @@ export function ClientDashboard() {
     queryKey: ['compliance', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('martyn_compliance').select('*').eq('tenant_id', user!.tenant_id!)
-      return (data ?? []) as MartynCompliance[]
+      return api.get<MartynCompliance[]>(`/compliance?tenant_id=${user!.tenant_id!}`)
     }
   })
 

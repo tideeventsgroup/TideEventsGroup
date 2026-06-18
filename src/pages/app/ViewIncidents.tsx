@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { Modal } from '../../components/ui/Modal'
 import { ConfirmModal } from '../../components/shared/ConfirmModal'
@@ -27,34 +27,48 @@ export function ViewIncidents() {
   const [criticalOpen, setCriticalOpen] = useState(false)
   const [criticalDone, setCriticalDone] = useState(false)
   const [declaring, setDeclaring] = useState(false)
+  const [wsUrl, setWsUrl] = useState<string | null>(null)
 
   const eventId = localStorage.getItem('tide_event_id')
 
   useEffect(() => {
     if (!eventId) return
-    supabase.from('incidents').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
-      .then(({ data }) => setIncidents((data ?? []) as Incident[]))
-
-    const channel = supabase.channel('incidents').on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'incidents', filter: `event_id=eq.${eventId}` },
-      () => {
-        supabase.from('incidents').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
-          .then(({ data }) => setIncidents((data ?? []) as Incident[]))
-      }
-    ).subscribe()
-
-    return () => { supabase.removeChannel(channel) }
+    api.get<Incident[]>(`/incidents?event_id=${eventId}`)
+      .then(setIncidents)
+      .catch(() => {})
   }, [eventId])
 
+  useEffect(() => {
+    api.post<{ url: string }>('/realtime/negotiate', {})
+      .then(({ url }) => setWsUrl(url))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!wsUrl || !eventId) return
+    const ws = new WebSocket(wsUrl)
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data)
+      if (msg.type === 'incident.created' || msg.type === 'incident.updated') {
+        api.get<Incident[]>(`/incidents?event_id=${eventId}`)
+          .then(setIncidents)
+          .catch(() => {})
+      }
+    }
+    return () => ws.close()
+  }, [wsUrl, eventId])
+
   async function updateStatus(id: string, status: IncidentStatus) {
-    await supabase.from('incidents').update({ status, resolved_at: status === 'resolved' ? new Date().toISOString() : null }).eq('id', id)
+    await api.patch(`/incidents/${id}`, { status, resolved_at: status === 'resolved' ? new Date().toISOString() : null })
     setSelected(prev => prev ? { ...prev, status } : null)
+    if (eventId) {
+      api.get<Incident[]>(`/incidents?event_id=${eventId}`).then(setIncidents).catch(() => {})
+    }
   }
 
   async function declareCritical() {
     setDeclaring(true)
-    await supabase.from('incidents').insert({
+    await api.post('/incidents', {
       event_id: eventId,
       tenant_id: user?.tenant_id,
       category: 'critical_declaration',
@@ -64,6 +78,7 @@ export function ViewIncidents() {
       logged_by: user?.id,
       reference_number: `CRITICAL-${Date.now()}`,
     })
+
     setDeclaring(false)
     setCriticalOpen(false)
     setCriticalDone(true)

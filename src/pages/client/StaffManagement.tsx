@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Table } from '../../components/ui/Table'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -30,12 +30,7 @@ export function StaffManagement() {
     queryKey: ['staff', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('tenant_id', user!.tenant_id!)
-        .in('role', ['client_staff'])
-      return (data ?? []) as User[]
+      return api.get<User[]>(`/users?tenant_id=${user!.tenant_id!}&role=client_staff`)
     }
   })
 
@@ -45,17 +40,12 @@ export function StaffManagement() {
 
   const invite = useMutation({
     mutationFn: async (data: FormData) => {
-      // In production this would call supabase.auth.admin.inviteUserByEmail
-      // which requires the service role key from a secure backend
-      // For now, create user record and log intent
-      console.log('Invite staff member:', data)
-      const { error } = await supabase.from('users').insert({
+      await api.post('/users', {
         email: data.email,
         name: data.name,
         role: 'client_staff',
         tenant_id: user!.tenant_id!,
       })
-      if (error) throw error
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['staff'] })

@@ -8,13 +8,16 @@ window.addEventListener('online', async () => {
   const queue: unknown[] = JSON.parse(localStorage.getItem('tide_ims_offline_queue') ?? '[]')
   if (!queue.length) return
 
-  const { supabase } = await import('./lib/supabase')
+  const { api } = await import('./lib/api')
   const failed: unknown[] = []
 
   for (const incident of queue) {
     const { tempId, ...data } = incident as Record<string, unknown>
-    const { error } = await supabase.from('incidents').insert(data)
-    if (error) failed.push(incident)
+    try {
+      await api.post('/incidents', data)
+    } catch {
+      failed.push(incident)
+    }
   }
 
   localStorage.setItem('tide_ims_offline_queue', JSON.stringify(failed))

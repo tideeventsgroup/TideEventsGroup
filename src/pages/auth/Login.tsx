@@ -26,8 +26,11 @@ export function Login() {
 
   async function onSubmit(data: FormData) {
     setAuthError(null)
-    const { error } = await signIn(data.email, data.password)
-    if (error) setAuthError('Incorrect email or password. Please try again.')
+    try {
+      await signIn(data.email, data.password)
+    } catch {
+      setAuthError('Incorrect email or password. Please try again.')
+    }
   }
 
   return (

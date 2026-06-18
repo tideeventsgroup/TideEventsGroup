@@ -1,65 +1,57 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
+import { DEMO_MODE, DEMO_LOGIN_HINT, DEMO_USERS } from '../lib/demo'
 import type { User } from '../types'
 
-interface AuthContextValue {
+interface AuthCtx {
   user: User | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+const AuthContext = createContext<AuthCtx>({ user: null, loading: true, signIn: async () => {}, signOut: async () => {} })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setUser(null)
-        setLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    if (DEMO_MODE) {
+      const saved = sessionStorage.getItem('demo_user')
+      if (saved) setUser(JSON.parse(saved))
+      setLoading(false)
+      return
+    }
+    const token = localStorage.getItem('tide_token')
+    if (!token) { setLoading(false); return }
+    api.get<User>('/auth/me')
+      .then(setUser)
+      .catch(() => localStorage.removeItem('tide_token'))
+      .finally(() => setLoading(false))
   }, [])
 
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase.from('users').select('*').eq('id', userId).single()
-    setUser(data ?? null)
-    setLoading(false)
-  }
-
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error as Error | null }
+    if (DEMO_MODE) {
+      const role = DEMO_LOGIN_HINT[email.toLowerCase()]
+      if (!role) throw new Error('Invalid demo credentials')
+      const demoUser = DEMO_USERS[role as keyof typeof DEMO_USERS]
+      sessionStorage.setItem('demo_user', JSON.stringify(demoUser))
+      setUser(demoUser as unknown as User)
+      return
+    }
+    const { token, user } = await api.post<{ token: string; user: User }>('/auth/login', { email, password })
+    localStorage.setItem('tide_token', token)
+    setUser(user)
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    if (DEMO_MODE) { sessionStorage.removeItem('demo_user'); setUser(null); return }
+    localStorage.removeItem('tide_token')
+    setUser(null)
   }
 
-  return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ user, loading, signIn, signOut }}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
+export function useAuth() { return useContext(AuthContext) }

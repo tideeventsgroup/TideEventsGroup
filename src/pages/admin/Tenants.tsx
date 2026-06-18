@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Table } from '../../components/ui/Table'
 import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
@@ -34,11 +34,7 @@ export function AdminTenants() {
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ['tenants'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('tenants').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      return data as Tenant[]
-    }
+    queryFn: () => api.get<Tenant[]>('/tenants'),
   })
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -47,18 +43,7 @@ export function AdminTenants() {
   })
 
   const createTenant = useMutation({
-    mutationFn: async (data: FormData) => {
-      const { error } = await supabase.from('tenants').insert({
-        name: data.name,
-        primary_contact_name: data.primary_contact_name,
-        primary_contact_email: data.primary_contact_email,
-        primary_contact_phone: data.primary_contact_phone,
-        type: data.type,
-        licence_tier: data.licence_tier,
-        status: 'onboarding',
-      })
-      if (error) throw error
-    },
+    mutationFn: (data: FormData) => api.post('/tenants', { ...data, status: 'onboarding' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tenants'] })
       reset()
@@ -67,10 +52,7 @@ export function AdminTenants() {
   })
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('tenants').update({ status }).eq('id', id)
-      if (error) throw error
-    },
+    mutationFn: ({ id, status }: { id: string; status: string }) => api.patch(`/tenants/${id}`, { status }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenants'] }); setConfirmAction(null) }
   })
 

@@ -1,40 +1,30 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, Calendar, AlertTriangle, ClipboardCheck, TrendingUp, ArrowUpRight } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { StatusBadge } from '../../components/ui/Badge'
 import { formatDateTime } from '../../lib/utils'
 
-async function fetchStats() {
-  const [tenants, events, incidents] = await Promise.all([
-    supabase.from('tenants').select('id', { count: 'exact', head: true }),
-    supabase.from('events').select('id', { count: 'exact', head: true }).eq('status', 'live'),
-    supabase.from('incidents').select('id', { count: 'exact', head: true }).neq('status', 'resolved'),
-  ])
-  return {
-    totalClients: tenants.count ?? 0,
-    activeEvents: events.count ?? 0,
-    liveIncidents: incidents.count ?? 0,
-    pendingActions: 0,
-  }
+interface Stats {
+  totalClients: number
+  activeEvents: number
+  liveIncidents: number
+  pendingActions: number
 }
 
 export function AdminDashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: fetchStats })
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: () => api.get<Stats>('/stats'),
+  })
   const { data: recentAudit = [], isLoading: auditLoading } = useQuery({
     queryKey: ['audit-recent'],
-    queryFn: async () => {
-      const { data } = await supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(8)
-      return data ?? []
-    }
+    queryFn: () => api.get<Record<string, unknown>[]>('/audit?limit=8'),
   })
   const { data: recentTenants = [] } = useQuery({
     queryKey: ['tenants-recent'],
-    queryFn: async () => {
-      const { data } = await supabase.from('tenants').select('*').order('created_at', { ascending: false }).limit(5)
-      return data ?? []
-    }
+    queryFn: () => api.get<Record<string, unknown>[]>('/tenants'),
   })
 
   const statCards = [

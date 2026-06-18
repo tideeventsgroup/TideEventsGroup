@@ -2,7 +2,7 @@ import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, Circle, Clock } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Button } from '../../components/ui/Button'
 import type { MartynCompliance, ComplianceStatus } from '../../types'
 
@@ -37,20 +37,19 @@ export function Compliance() {
     queryKey: ['compliance', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('martyn_compliance').select('*').eq('tenant_id', user!.tenant_id!)
-      return (data ?? []) as MartynCompliance[]
+      return api.get<MartynCompliance[]>(`/compliance?tenant_id=${user!.tenant_id!}`)
     }
   })
 
   const upsert = useMutation({
     mutationFn: async ({ key, status }: { key: string; status: ComplianceStatus }) => {
-      await supabase.from('martyn_compliance').upsert({
+      await api.put('/compliance', {
         tenant_id: user!.tenant_id!,
         item_key: key,
         status,
         updated_by: user!.id,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'tenant_id,event_id,item_key' })
+      })
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['compliance'] })
   })

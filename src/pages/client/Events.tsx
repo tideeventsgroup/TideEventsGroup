@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Table } from '../../components/ui/Table'
 import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
@@ -43,8 +43,7 @@ export function Events() {
     queryKey: ['events', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('events').select('*').eq('tenant_id', user!.tenant_id!).order('start_date')
-      return (data ?? []) as Event[]
+      return api.get<Event[]>(`/events?tenant_id=${user!.tenant_id!}`)
     }
   })
 
@@ -54,12 +53,11 @@ export function Events() {
 
   const create = useMutation({
     mutationFn: async (data: FormData) => {
-      const { error } = await supabase.from('events').insert({
+      await api.post('/events', {
         ...data,
         tenant_id: user!.tenant_id!,
         status: 'planning',
       })
-      if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['events'] }); reset(); setAddOpen(false) }
   })

@@ -5,7 +5,7 @@ import {
   Wrench, Volume2, AlertCircle, MoreHorizontal, ArrowLeft, Camera, CheckCircle2
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { generateIncidentRef } from '../../lib/utils'
 import type { IncidentCategory, IncidentSeverity } from '../../types'
 
@@ -101,7 +101,7 @@ export function LogIncident() {
       q.push({ ...payload, tempId: ref, created_at: new Date().toISOString() })
       localStorage.setItem('tide_ims_offline_queue', JSON.stringify(q))
     } else {
-      await supabase.from('incidents').insert(payload)
+      await api.post('/incidents', payload)
     }
 
     setSubmitting(false)
