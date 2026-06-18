@@ -28,7 +28,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) { setLoading(false); return }
     api.get<User>('/auth/me')
       .then(setUser)
-      .catch(() => localStorage.removeItem('tide_token'))
+      .catch((err: unknown) => {
+        // Only clear token on 401 — not on network errors or server cold-starts
+        if ((err as { status?: number }).status === 401) {
+          localStorage.removeItem('tide_token')
+        } else {
+          // Keep token and try to use cached user if available
+          const cached = localStorage.getItem('tide_user')
+          if (cached) { try { setUser(JSON.parse(cached)) } catch { /* ignore */ } }
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -43,17 +52,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const { token, user } = await api.post<{ token: string; user: User }>('/auth/login', { email, password })
     localStorage.setItem('tide_token', token)
+    localStorage.setItem('tide_user', JSON.stringify(user))
     setUser(user)
   }
 
   async function signOut() {
     if (DEMO_MODE) { sessionStorage.removeItem('demo_user'); setUser(null); return }
     localStorage.removeItem('tide_token')
+    localStorage.removeItem('tide_user')
     setUser(null)
   }
 
   function setAuthenticatedUser(token: string, user: User) {
     localStorage.setItem('tide_token', token)
+    localStorage.setItem('tide_user', JSON.stringify(user))
     setUser(user)
   }
 

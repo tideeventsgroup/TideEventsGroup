@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, CheckCircle, AlertTriangle, Edit2, Save, X, ArrowUpRight } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -424,11 +424,11 @@ export function IncidentDetail() {
             <p style={{ fontSize: 13, fontWeight: 600, color: '#0F0F14' }}>{incident.event_name ?? '—'}</p>
             <p style={{ fontSize: 12, color: '#9898AE', marginTop: 2 }}>{incident.tenant_name}</p>
             {incident.event_id && (
-              <a href={`/client/events/${incident.event_id}`}
+              <Link to={`/client/events/${incident.event_id}`}
                 className="mt-3 flex items-center gap-1 text-xs font-semibold hover:underline"
                 style={{ color: '#E8521A' }}>
                 Open event <ArrowUpRight size={12} />
-              </a>
+              </Link>
             )}
           </div>
 

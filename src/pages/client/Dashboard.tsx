@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, CheckCircle, User, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -101,7 +102,7 @@ export function ClientDashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No upcoming events. <a href="/client/events" className="text-teal hover:underline">Create your first event.</a></p>
+              <p className="text-sm text-gray-400">No upcoming events. <Link to="/client/events" className="text-teal hover:underline">Create your first event.</Link></p>
             )
           )}
         </div>

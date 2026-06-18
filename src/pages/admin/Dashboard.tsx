@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, Calendar, AlertTriangle, ClipboardCheck, TrendingUp, ArrowUpRight, Activity } from 'lucide-react'
 import { api } from '../../lib/api'
@@ -119,16 +120,16 @@ export function AdminDashboard() {
               </div>
               <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0F0F14' }}>Active Clients</h2>
             </div>
-            <a href="/admin/clients" className="flex items-center gap-1 text-xs font-semibold hover:underline" style={{ color: '#E8521A' }}>
+            <Link to="/admin/clients" className="flex items-center gap-1 text-xs font-semibold hover:underline" style={{ color: '#E8521A' }}>
               View all <ArrowUpRight size={12} />
-            </a>
+            </Link>
           </div>
           {recentTenants.length > 0 ? (
             <div className="space-y-1">
               {recentTenants.slice(0, 6).map((t: Record<string, unknown>) => (
-                <a
+                <Link
                   key={t.id as string}
-                  href={`/admin/clients/${t.id}`}
+                  to={`/admin/clients/${t.id}`}
                   className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-[var(--surface-2)]"
                 >
                   <div className="flex items-center gap-3">
@@ -146,7 +147,7 @@ export function AdminDashboard() {
                     </div>
                   </div>
                   <StatusBadge status={t.status as string} />
-                </a>
+                </Link>
               ))}
             </div>
           ) : (
@@ -166,9 +167,9 @@ export function AdminDashboard() {
               </div>
               <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0F0F14' }}>Recent Activity</h2>
             </div>
-            <a href="/admin/audit" className="flex items-center gap-1 text-xs font-semibold hover:underline" style={{ color: '#E8521A' }}>
+            <Link to="/admin/audit" className="flex items-center gap-1 text-xs font-semibold hover:underline" style={{ color: '#E8521A' }}>
               Audit log <ArrowUpRight size={12} />
-            </a>
+            </Link>
           </div>
           {auditLoading ? <LoadingSpinner className="h-24" /> : (
             recentAudit.length > 0 ? (
