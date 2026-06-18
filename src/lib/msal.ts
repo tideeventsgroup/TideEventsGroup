@@ -10,7 +10,7 @@ const config: Configuration = {
     clientId: clientId ?? 'not-configured',
     authority: `https://login.microsoftonline.com/${tenantId ?? 'common'}`,
     // Blank page — router won't intercept it, MSAL communicates result via BroadcastChannel
-    redirectUri: `${window.location.origin}/auth-redirect.html`,
+    redirectUri: `${window.location.origin}/redirect.html`,
   },
   cache: { cacheLocation: 'localStorage' },
 }
