@@ -7,6 +7,7 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { TideLogo } from '../../components/ui/TideLogo'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -36,6 +37,10 @@ export function Login() {
     <div className="min-h-screen bg-navy flex">
       {/* Left panel — brand */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] flex-shrink-0 bg-navy-light p-12">
+        <div className="flex items-center gap-3">
+          <TideLogo variant="full-white" height={40} />
+        </div>
+
         <div>
           <blockquote className="text-white/80 text-lg font-medium leading-relaxed mb-4">
             "Professional event safety management, from planning to post-event review."
@@ -51,6 +56,10 @@ export function Login() {
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-6 bg-surface">
         <div className="w-full max-w-[400px]">
+          <div className="flex justify-center mb-8">
+            <TideLogo variant="full-black" height={52} />
+          </div>
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-navy">Sign in</h1>
             <p className="text-gray-500 text-sm mt-1">Enter your credentials to access your portal</p>
