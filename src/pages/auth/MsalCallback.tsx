@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { msalInstance } from '../../lib/msal'
+import { getMsalInit } from '../../lib/msal'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import type { User } from '../../types'
@@ -11,32 +11,25 @@ export function MsalCallback() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function handleCallback() {
+    getMsalInit().then(async result => {
+      if (!result) {
+        navigate('/login', { replace: true })
+        return
+      }
       try {
-        await msalInstance.initialize()
-        const result = await msalInstance.handleRedirectPromise()
-
-        if (!result) {
-          // No redirect result — maybe user landed here directly
-          navigate('/login', { replace: true })
-          return
-        }
-
         const { token, user } = await api.post<{ token: string; user: User }>('/auth/microsoft', {
           idToken: result.idToken,
         })
-
         setAuthenticatedUser(token, user)
-
         if (user.role === 'super_admin') navigate('/admin', { replace: true })
         else if (user.role === 'client_staff') navigate('/app/select-event', { replace: true })
         else navigate('/client', { replace: true })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Sign-in failed')
       }
-    }
-
-    handleCallback()
+    }).catch(err => {
+      setError(err instanceof Error ? err.message : 'Sign-in failed')
+    })
   }, [])
 
   if (error) {
