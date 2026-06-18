@@ -1,0 +1,27 @@
+{
+  "routes": [
+    {
+      "route": "/redirect.html",
+      "serve": "/redirect.html",
+      "statusCode": 200,
+      "headers": {
+        "Cross-Origin-Opener-Policy": "unsafe-none"
+      }
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/redirect.html",
+      "/assets/*",
+      "*.{css,js,png,svg,ico,webmanifest,json}"
+    ]
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff"
+  }
+}
