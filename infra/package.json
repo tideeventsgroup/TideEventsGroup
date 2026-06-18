@@ -1,0 +1,12 @@
+{
+    "name": "tide-ims-infra",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^20",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/azure-native": "^3.19.0",
+        "@pulumi/pulumi": "^3.0.0"
+    }
+}

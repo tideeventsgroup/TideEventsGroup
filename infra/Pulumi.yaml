@@ -1,0 +1,6 @@
+name: tide-ims
+description: Tide IMS Azure infrastructure
+runtime:
+  name: nodejs
+  options:
+    typescript: true

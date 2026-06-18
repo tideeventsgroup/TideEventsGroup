@@ -3,7 +3,7 @@ import * as resources from "@pulumi/azure-native/resources";
 import * as dbforpostgresql from "@pulumi/azure-native/dbforpostgresql";
 import * as web from "@pulumi/azure-native/web";
 import * as storage from "@pulumi/azure-native/storage";
-import * as signalrservice from "@pulumi/azure-native/signalrservice";
+import * as webpubsub from "@pulumi/azure-native/webpubsub";
 
 const config = new pulumi.Config();
 const location = config.get("location") ?? "westeurope";
@@ -52,7 +52,7 @@ const saKeys = storage.listStorageAccountKeysOutput({ resourceGroupName: rg.name
 const storageConnectionString = pulumi.interpolate`DefaultEndpointsProtocol=https;AccountName=${sa.name};AccountKey=${saKeys.keys[0].value};EndpointSuffix=core.windows.net`;
 
 // Web PubSub for realtime
-const pubsub = new signalrservice.WebPubSub("tide-pubsub", {
+const pubsub = new webpubsub.WebPubSub("tide-pubsub", {
   resourceName: "tide-ims-pubsub",
   resourceGroupName: rg.name,
   location,
@@ -60,7 +60,7 @@ const pubsub = new signalrservice.WebPubSub("tide-pubsub", {
   tags: { project: "tide-ims" },
 });
 
-const pubsubKeys = signalrservice.listWebPubSubKeysOutput({ resourceGroupName: rg.name, resourceName: pubsub.name });
+const pubsubKeys = webpubsub.listWebPubSubKeysOutput({ resourceGroupName: rg.name, resourceName: pubsub.name });
 
 // App Service Plan (Consumption Y1 for Functions)
 const plan = new web.AppServicePlan("tide-fn-plan", {
@@ -88,7 +88,7 @@ const fnApp = new web.WebApp("tide-fn", {
       { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~20" },
       { name: "DATABASE_URL", value: dbConnectionString },
       { name: "JWT_SECRET", value: jwtSecret },
-      { name: "WEBPUBSUB_CONNECTION_STRING", value: pubsubKeys.primaryConnectionString },
+      { name: "WEBPUBSUB_CONNECTION_STRING", value: pulumi.output(pubsubKeys.primaryConnectionString).apply(v => v ?? '') },
     ],
     cors: { allowedOrigins: ["*"] },
     nodeVersion: "~20",
@@ -125,4 +125,4 @@ export const staticWebAppHostname = swa.defaultHostname;
 export const functionsAppName = fnApp.name;
 export const postgresServerName = pgServer.name;
 export const postgresConnectionString = pulumi.secret(dbConnectionString);
-export const webPubSubConnectionString = pulumi.secret(pubsubKeys.primaryConnectionString);
+export const webPubSubConnectionString = pulumi.secret(pulumi.output(pubsubKeys.primaryConnectionString).apply(v => v ?? ''));
