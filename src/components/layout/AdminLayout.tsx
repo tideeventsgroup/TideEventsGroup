@@ -23,15 +23,15 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full bg-navy" style={{ width: 256 }}>
       {/* Brand */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="text-white font-semibold text-sm leading-tight">Tide Events Group</div>
+      <div className="px-5 py-6 border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <img src="/logo-white.png" alt="Tide Events Group" style={{ height: 28, width: 'auto' }} />
+          {onClose && (
+            <button onClick={onClose} className="text-white/50 hover:text-white tap-target">
+              <X size={18} />
+            </button>
+          )}
         </div>
-        {onClose && (
-          <button onClick={onClose} className="text-white/50 hover:text-white tap-target">
-            <X size={18} />
-          </button>
-        )}
       </div>
 
       {/* Nav */}
@@ -43,7 +43,9 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
             end={item.end}
             onClick={onClose}
             className={({ isActive }) =>
-              cn('nav-item', isActive ? 'nav-item-active' : 'nav-item-inactive')
+              isActive
+                ? 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors bg-teal text-white cursor-pointer'
+                : 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-white/60 hover:bg-white/8 hover:text-white cursor-pointer'
             }
           >
             <item.icon size={18} aria-hidden="true" />
@@ -81,7 +83,7 @@ export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-surface overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: '#F0F0F0' }}>
       {/* Desktop sidebar */}
       <div className="hidden lg:block flex-shrink-0">
         <Sidebar />
@@ -108,13 +110,11 @@ export function AdminLayout() {
           >
             <Menu size={20} />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-white font-semibold text-sm">Tide Events Group</span>
-          </div>
+          <img src="/logo-white.png" alt="Tide Events Group" style={{ height: 24, width: 'auto' }} />
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-content mx-auto px-6 py-8">
+          <div className="max-w-7xl mx-auto px-6 py-8">
             <Outlet />
           </div>
         </main>

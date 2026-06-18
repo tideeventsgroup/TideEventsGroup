@@ -22,7 +22,7 @@
   html { @apply text-base antialiased; }
 
   body {
-    background-color: var(--surface);
+    background-color: #F0F0F0;
     color: var(--navy);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     line-height: 1.5;
@@ -40,7 +40,7 @@
 
   /* ── Buttons ─────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium text-sm
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium text-sm
            transition-all duration-150 focus-visible:outline-none focus-visible:ring-2
            focus-visible:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none
            select-none cursor-pointer;
@@ -69,7 +69,7 @@
 
   /* ── Inputs ──────────────────────────────────── */
   .input {
-    @apply w-full px-3 py-2.5 border border-[var(--border)] rounded-lg text-sm text-navy
+    @apply w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-navy
            bg-white placeholder:text-gray-400
            focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal
            transition-colors duration-150;
@@ -90,10 +90,10 @@
 
   /* ── Cards ───────────────────────────────────── */
   .card {
-    @apply bg-white border border-[var(--border)] rounded-xl p-6;
+    @apply bg-white rounded-2xl p-6 shadow-sm border border-[var(--border)];
   }
   .card-sm {
-    @apply bg-white border border-[var(--border)] rounded-xl p-4;
+    @apply bg-white rounded-2xl p-4 shadow-sm border border-[var(--border)];
   }
 
   /* ── Tables ──────────────────────────────────── */
@@ -114,10 +114,18 @@
            transition-colors duration-150 cursor-pointer;
   }
   .nav-item-active {
-    @apply bg-white/15 text-white;
+    @apply bg-teal text-white;
   }
   .nav-item-inactive {
-    @apply text-white/65 hover:bg-white/10 hover:text-white;
+    @apply text-white/60 hover:bg-white/8 hover:text-white;
+  }
+
+  /* ── Page accent ─────────────────────────────── */
+  .page-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
   }
 
   /* ── Mobile tap target ───────────────────────── */

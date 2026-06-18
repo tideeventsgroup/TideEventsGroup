@@ -24,7 +24,7 @@ function ComplianceRing({ percent }: { percent: number }) {
         <circle cx="55" cy="55" r={r} fill="none" stroke="#e5e7eb" strokeWidth="10" />
         <circle
           cx="55" cy="55" r={r} fill="none"
-          stroke="#1D9E75" strokeWidth="10"
+          stroke="#E8521A" strokeWidth="10"
           strokeDasharray={`${dash} ${circ}`}
           strokeLinecap="round"
           className="transition-all duration-700"
