@@ -77,6 +77,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<AuthRedirect />} />
+            <Route path="/auth/callback" element={<RootRedirect />} />
             <Route path="/" element={<RootRedirect />} />
 
             {/* Super admin */}

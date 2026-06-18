@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -27,7 +28,8 @@ function MicrosoftIcon() {
 }
 
 export function Login() {
-  const { signIn, setAuthenticatedUser } = useAuth()
+  const { signIn, setAuthenticatedUser, user } = useAuth()
+  const navigate = useNavigate()
   const [authError, setAuthError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [msalLoading, setMsalLoading] = useState(false)
@@ -36,10 +38,17 @@ export function Login() {
     resolver: zodResolver(schema),
   })
 
+  function redirectForRole(role: string) {
+    if (role === 'super_admin') navigate('/admin', { replace: true })
+    else if (role === 'client_staff') navigate('/app/select-event', { replace: true })
+    else navigate('/client', { replace: true })
+  }
+
   async function onSubmit(data: FormData) {
     setAuthError(null)
     try {
       await signIn(data.email, data.password)
+      // user state will update; navigate via effect
     } catch {
       setAuthError('Incorrect email or password. Please try again.')
     }
@@ -50,10 +59,11 @@ export function Login() {
     setMsalLoading(true)
     try {
       const result = await signInWithMicrosoft()
-      const { token, user } = await api.post<{ token: string; user: import('../../types').User }>('/auth/microsoft', {
+      const { token, user: msUser } = await api.post<{ token: string; user: import('../../types').User }>('/auth/microsoft', {
         idToken: result.idToken,
       })
-      setAuthenticatedUser(token, user)
+      setAuthenticatedUser(token, msUser)
+      redirectForRole(msUser.role)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Microsoft sign-in failed'
       setAuthError(msg)
@@ -61,6 +71,11 @@ export function Login() {
       setMsalLoading(false)
     }
   }
+
+  // Navigate after email/password login sets user in context
+  React.useEffect(() => {
+    if (user) redirectForRole(user.role)
+  }, [user])
 
   return (
     <div className="min-h-screen w-full flex flex-col" style={{ background: '#111111' }}>
