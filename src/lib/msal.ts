@@ -25,7 +25,17 @@ async function getInstance(): Promise<PublicClientApplication> {
   return instance
 }
 
+function clearMsalLock() {
+  const clientId = import.meta.env.VITE_AZURE_CLIENT_ID as string
+  ;[localStorage, sessionStorage].forEach(store => {
+    Object.keys(store)
+      .filter(k => k.includes(clientId) && k.includes('interaction.status'))
+      .forEach(k => store.removeItem(k))
+  })
+}
+
 export async function signInWithMicrosoft(): Promise<AuthenticationResult> {
+  clearMsalLock()
   const msal = await getInstance()
   return msal.loginPopup({
     scopes: ['openid', 'profile', 'email'],
