@@ -2,7 +2,7 @@ name: Deploy to Azure
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/ecstatic-babbage-kx5x3f]
   workflow_dispatch:
 
 jobs:
