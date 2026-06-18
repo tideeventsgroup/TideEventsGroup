@@ -7,7 +7,7 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { TideLogo } from '../../components/ui/TideLogo'
-import { msalEnabled, signInWithMicrosoft } from '../../lib/msal'
+import { msalEnabled, signInWithMicrosoft } from '../../lib/microsoftAuth'
 import { api } from '../../lib/api'
 
 const schema = z.object({
@@ -58,16 +58,10 @@ export function Login() {
     setAuthError(null)
     setMsalLoading(true)
     try {
-      const result = await signInWithMicrosoft()
-      const { token, user: msUser } = await api.post<{ token: string; user: import('../../types').User }>('/auth/microsoft', {
-        idToken: result.idToken,
-      })
-      setAuthenticatedUser(token, msUser)
-      redirectForRole(msUser.role)
+      await signInWithMicrosoft() // redirects away; page unloads
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Microsoft sign-in failed'
       setAuthError(msg)
-    } finally {
       setMsalLoading(false)
     }
   }
