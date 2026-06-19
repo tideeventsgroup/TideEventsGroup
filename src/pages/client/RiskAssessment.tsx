@@ -93,7 +93,7 @@ export function RiskAssessment() {
       who_at_risk: risk.who_at_risk ?? '',
       controls: risk.existing_controls ?? '',
       likelihood: risk.likelihood ?? 1,
-      severity: risk.severity ?? 1,
+      severity: Number(risk.severity ?? 1),
       responsible_person: risk.responsible_person ?? '',
       review_date: risk.review_date ?? '',
     })

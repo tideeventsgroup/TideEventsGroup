@@ -194,7 +194,7 @@ export function EventDetail() {
       )}
 
       {/* Risk Register tab */}
-      {tab === 'risks' && <RiskAssessment eventId={id} />}
+      {tab === 'risks' && <RiskAssessment />}
 
       {/* Documents tab */}
       {tab === 'documents' && (

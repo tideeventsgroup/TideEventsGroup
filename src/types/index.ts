@@ -115,11 +115,17 @@ export interface TideEvent {
   created_at: string
 }
 
+// Legacy alias for backward compat with older pages
+export type Event = TideEvent
+
 // ── CAD Incident ─────────────────────────────────────────────
 export type IncidentPriority = 'P1' | 'P2' | 'P3' | 'P4' | 'P5'
 export type IncidentStatus = 'new' | 'assigned' | 'en_route' | 'on_scene' | 'resolved' | 'closed'
+  | 'logged' | 'in_progress'
 export type IncidentCategory =
   | 'security' | 'medical' | 'safety' | 'welfare' | 'infrastructure' | 'environmental' | 'other'
+  | 'crowd_pressure' | 'fire_evacuation' | 'ct_concern' | 'suspicious_behaviour'
+  | 'lost_person' | 'noise_nuisance' | 'near_miss'
 
 export type IncidentType =
   // Security
@@ -196,6 +202,7 @@ export interface Resource {
   location_lng: number | null
   status: ResourceStatus
   assigned_incident_id: string | null
+  assigned_cad_number?: string | null
   notes: string | null
   created_at: string
   updated_at: string
@@ -285,6 +292,9 @@ export interface Risk {
   review_date: string | null
   flagged_high: boolean | null
   created_at: string
+  // legacy fields
+  severity?: string
+  responsible_person?: string
 }
 
 // ── Staff Schedule ───────────────────────────────────────────
@@ -439,12 +449,14 @@ export const PRIORITY_LABELS: Record<IncidentPriority, string> = {
 }
 
 export const STATUS_COLORS: Record<IncidentStatus, { bg: string; text: string }> = {
-  new:      { bg: 'rgba(255,59,48,0.15)',   text: '#FF3B30' },
-  assigned: { bg: 'rgba(255,149,0,0.15)',   text: '#FF9500' },
-  en_route: { bg: 'rgba(255,204,0,0.15)',   text: '#FFCC00' },
-  on_scene: { bg: 'rgba(90,200,250,0.15)',  text: '#5AC8FA' },
-  resolved: { bg: 'rgba(52,199,89,0.15)',   text: '#34C759' },
-  closed:   { bg: 'rgba(99,99,102,0.15)',   text: '#636366' },
+  new:         { bg: 'rgba(255,59,48,0.15)',   text: '#FF3B30' },
+  assigned:    { bg: 'rgba(255,149,0,0.15)',   text: '#FF9500' },
+  en_route:    { bg: 'rgba(255,204,0,0.15)',   text: '#FFCC00' },
+  on_scene:    { bg: 'rgba(90,200,250,0.15)',  text: '#5AC8FA' },
+  resolved:    { bg: 'rgba(52,199,89,0.15)',   text: '#34C759' },
+  closed:      { bg: 'rgba(99,99,102,0.15)',   text: '#636366' },
+  logged:      { bg: 'rgba(255,59,48,0.15)',   text: '#FF3B30' },
+  in_progress: { bg: 'rgba(255,149,0,0.15)',   text: '#FF9500' },
 }
 
 export const INCIDENT_TYPES_BY_CATEGORY: Record<IncidentCategory, { value: IncidentType; label: string }[]> = {
@@ -494,4 +506,12 @@ export const INCIDENT_TYPES_BY_CATEGORY: Record<IncidentCategory, { value: Incid
     { value: 'major_incident_declaration', label: 'Major Incident Declaration' },
     { value: 'other', label: 'Other' },
   ],
+  // legacy categories mapped to nearest equivalents
+  crowd_pressure:       [{ value: 'crowd_crush', label: 'Crowd Pressure' }],
+  fire_evacuation:      [{ value: 'fire', label: 'Fire / Evacuation' }],
+  ct_concern:           [{ value: 'ct_concern', label: 'CT Concern' }],
+  suspicious_behaviour: [{ value: 'suspicious_behaviour', label: 'Suspicious Behaviour' }],
+  lost_person:          [{ value: 'missing_person', label: 'Lost Person' }],
+  noise_nuisance:       [{ value: 'other', label: 'Noise Nuisance' }],
+  near_miss:            [{ value: 'near_miss', label: 'Near Miss' }],
 }

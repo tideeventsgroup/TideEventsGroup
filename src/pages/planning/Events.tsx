@@ -40,7 +40,7 @@ export function PlanningEvents() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api.post('/events', body),
+    mutationFn: (body: Record<string, unknown>) => api.post<Record<string, unknown>>('/events', body),
     onSuccess: (event: Record<string, unknown>) => {
       qc.invalidateQueries({ queryKey: ['events'] })
       setShowNew(false)

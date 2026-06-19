@@ -15,6 +15,7 @@ const STATUS_FLOW: IncidentStatus[] = ['new','assigned','en_route','on_scene','r
 const STATUS_LABELS: Record<IncidentStatus, string> = {
   new: 'New', assigned: 'Assigned', en_route: 'En Route',
   on_scene: 'On Scene', resolved: 'Resolved', closed: 'Closed',
+  logged: 'Logged', in_progress: 'In Progress',
 }
 
 function timeAgo(iso: string) {

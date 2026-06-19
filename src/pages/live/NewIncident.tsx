@@ -44,7 +44,7 @@ export function NewIncident() {
   const [customZone, setCustomZone] = useState('')
 
   const mutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => api.post('/incidents', data),
+    mutationFn: (data: Record<string, unknown>) => api.post<Record<string, unknown>>('/incidents', data),
     onSuccess: (incident: Record<string, unknown>) => {
       qc.invalidateQueries({ queryKey: ['incidents'] })
       qc.invalidateQueries({ queryKey: ['live-incidents'] })

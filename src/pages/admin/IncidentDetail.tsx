@@ -105,16 +105,17 @@ export function IncidentDetail() {
     )
   }
 
-  const currentStatusIdx = STATUSES.indexOf(incident.status as typeof STATUSES[number])
-  const sc = STATUS_COLORS[incident.status] ?? STATUS_COLORS.logged
-  const sevColor = SEV_COLORS[incident.severity ?? ''] ?? { bg: '#F9FAFB', color: '#6B7280' }
+  const inc = incident!
+  const currentStatusIdx = STATUSES.indexOf(inc.status as typeof STATUSES[number])
+  const sc = STATUS_COLORS[inc.status] ?? STATUS_COLORS.logged
+  const sevColor = SEV_COLORS[inc.severity ?? ''] ?? { bg: '#F9FAFB', color: '#6B7280' }
 
   function startEdit() {
     setEditForm({
-      category: incident.category,
-      severity: incident.severity ?? '',
-      description: incident.description ?? '',
-      location_zone: incident.location_zone ?? '',
+      category: inc.category,
+      severity: inc.severity ?? '',
+      description: inc.description ?? '',
+      location_zone: inc.location_zone ?? '',
     })
     setEditing(true)
   }

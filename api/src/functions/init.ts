@@ -58,9 +58,11 @@ CREATE TABLE IF NOT EXISTS documents (
   tenant_id UUID REFERENCES tenants(id),
   event_id UUID REFERENCES events(id),
   name TEXT NOT NULL,
-  file_url TEXT NOT NULL,
+  file_url TEXT,
   file_size BIGINT,
   file_type TEXT,
+  category TEXT DEFAULT 'other',
+  status TEXT DEFAULT 'draft',
   uploaded_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -96,6 +98,32 @@ CREATE TABLE IF NOT EXISTS audit_log (
   resource_type TEXT,
   resource_id TEXT,
   metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS staff_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+  staff_name TEXT NOT NULL,
+  role TEXT DEFAULT 'other',
+  date DATE NOT NULL,
+  start_time TEXT DEFAULT '08:00',
+  end_time TEXT DEFAULT '16:00',
+  zone TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS site_zones (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+  tenant_id UUID REFERENCES tenants(id),
+  name TEXT NOT NULL,
+  zone_type TEXT DEFAULT 'other',
+  capacity INTEGER,
+  description TEXT,
+  grid_ref TEXT,
+  status TEXT DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 `

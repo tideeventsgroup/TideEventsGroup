@@ -334,81 +334,76 @@ export function LiveDashboard() {
       </div>
 
       {/* RIGHT PANEL — Status Board */}
-      <div className="flex flex-col flex-shrink-0 overflow-auto py-3"
-        style={{ width: 260, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex flex-col flex-shrink-0 overflow-auto"
+        style={{ width: 256, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
 
-        {/* Event info */}
-        <div className="px-4 mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-2 w-2 rounded-full live-dot" style={{ background: '#34C759' }} />
+        {/* Event name + live indicator */}
+        <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="h-2 w-2 rounded-full live-dot flex-shrink-0" style={{ background: '#34C759' }} />
             <span className="text-white font-bold text-sm truncate">{liveEvent.name}</span>
           </div>
           {liveEvent.expected_attendance && (
-            <p className="text-white/30 text-xs">Cap: {liveEvent.expected_attendance.toLocaleString()}</p>
+            <p className="text-white/30 text-xs pl-4">Capacity: {liveEvent.expected_attendance.toLocaleString()}</p>
           )}
         </div>
 
-        {/* Status counts */}
-        <div className="px-3 mb-4">
-          <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-1">Operational Picture</p>
-          <div className="space-y-2">
+        {/* 2×3 status grid */}
+        <div className="p-3">
+          <p className="text-white/25 text-xs font-bold uppercase tracking-widest mb-2.5 px-1">Live Picture</p>
+          <div className="grid grid-cols-2 gap-2">
             {statusCategories.map(({ label, count, color, pulse }) => (
               <div key={label}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${pulse && count > 0 ? 'critical-pulse' : ''}`}
-                style={{ background: 'rgba(255,255,255,0.04)', border: pulse && count > 0 ? `1px solid ${color}40` : '1px solid transparent' }}>
-                <span className="text-white/60 text-xs">{label}</span>
-                <span className="font-black text-sm" style={{ color: count === 0 ? 'rgba(255,255,255,0.2)' : color }}>
+                className={`flex flex-col px-3 py-3 rounded-xl ${pulse && count > 0 ? 'critical-pulse' : ''}`}
+                style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${pulse && count > 0 ? color + '30' : 'transparent'}` }}>
+                <span className="font-black text-2xl leading-none tabular-nums"
+                  style={{ color: count === 0 ? 'rgba(255,255,255,0.12)' : color }}>
                   {count}
                 </span>
+                <span className="text-white/40 text-xs mt-1.5 leading-tight">{label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px mx-3 mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div className="h-px mx-3" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
         {/* Resource availability */}
-        <div className="px-3 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-white/30 text-xs font-semibold uppercase tracking-wider px-1">Resources</p>
-            <Link to="/live/resources" className="text-white/30 hover:text-white/60 transition-colors">
+        <div className="p-3">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-white/25 text-xs font-bold uppercase tracking-widest px-1">Resources</p>
+            <Link to="/live/resources" className="text-white/25 hover:text-white/60 transition-colors">
               <ArrowUpRight size={12} />
             </Link>
           </div>
           <ResourceSummary resources={resources} />
         </div>
 
-        {/* Divider */}
-        <div className="h-px mx-3 mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div className="h-px mx-3" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
-        {/* Quick stats */}
+        {/* Performance metrics */}
         {stats && (
-          <div className="px-3">
-            <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-1">Performance</p>
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-white/50 text-xs">Avg resolution</span>
-                <span className="text-white font-bold text-sm">{stats.avgResolutionMin}m</span>
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <span className="text-white/50 text-xs">Total incidents</span>
-                <span className="text-white font-bold text-sm">{stats.totalIncidents}</span>
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <span className="text-white/50 text-xs">Resolution rate</span>
-                <span className="text-white font-bold text-sm">
-                  {stats.totalIncidents > 0 ? Math.round((stats.resolvedIncidents / stats.totalIncidents) * 100) : 0}%
-                </span>
-              </div>
+          <div className="p-3">
+            <p className="text-white/25 text-xs font-bold uppercase tracking-widest mb-2.5 px-1">Performance</p>
+            <div className="space-y-2">
+              {[
+                { label: 'Avg resolution', value: `${stats.avgResolutionMin}m` },
+                { label: 'Total incidents', value: stats.totalIncidents },
+                { label: 'Resolution rate', value: `${stats.totalIncidents > 0 ? Math.round((stats.resolvedIncidents / stats.totalIncidents) * 100) : 0}%` },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between px-1 py-1">
+                  <span className="text-white/40 text-xs">{label}</span>
+                  <span className="text-white font-bold text-sm tabular-nums">{value}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* View all link */}
-        <div className="mt-auto pt-4 px-3">
+        <div className="mt-auto p-3">
           <Link to="/live/incidents"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-bold text-white"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-bold"
             style={{ background: 'rgba(232,82,26,0.1)', border: '1px solid rgba(232,82,26,0.2)', color: '#E8521A' }}>
             Full Incident Log <ArrowUpRight size={12} />
           </Link>

@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'
 interface SwitcherOption {
   label: string
   path: string
-  icon: React.FC<{ size?: number; color?: string }>
+  icon: React.ElementType
   roles: string[]
 }
 
