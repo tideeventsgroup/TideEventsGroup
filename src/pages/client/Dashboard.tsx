@@ -1,8 +1,9 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, CheckCircle, User, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { StatusBadge } from '../../components/ui/Badge'
 import { formatDate, daysUntil } from '../../lib/utils'
@@ -24,7 +25,7 @@ function ComplianceRing({ percent }: { percent: number }) {
         <circle cx="55" cy="55" r={r} fill="none" stroke="#e5e7eb" strokeWidth="10" />
         <circle
           cx="55" cy="55" r={r} fill="none"
-          stroke="#1D9E75" strokeWidth="10"
+          stroke="#E8521A" strokeWidth="10"
           strokeDasharray={`${dash} ${circ}`}
           strokeLinecap="round"
           className="transition-all duration-700"
@@ -46,8 +47,7 @@ export function ClientDashboard() {
     queryKey: ['client-events', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('events').select('*').eq('tenant_id', user!.tenant_id!).order('start_date')
-      return (data ?? []) as Event[]
+      return api.get<Event[]>(`/events?tenant_id=${user!.tenant_id!}`)
     }
   })
 
@@ -55,8 +55,7 @@ export function ClientDashboard() {
     queryKey: ['compliance', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('martyn_compliance').select('*').eq('tenant_id', user!.tenant_id!)
-      return (data ?? []) as MartynCompliance[]
+      return api.get<MartynCompliance[]>(`/compliance?tenant_id=${user!.tenant_id!}`)
     }
   })
 
@@ -103,7 +102,7 @@ export function ClientDashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No upcoming events. <a href="/client/events" className="text-teal hover:underline">Create your first event.</a></p>
+              <p className="text-sm text-gray-400">No upcoming events. <Link to="/client/events" className="text-teal hover:underline">Create your first event.</Link></p>
             )
           )}
         </div>

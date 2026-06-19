@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Plus, Trash2, Check, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Button } from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 
@@ -106,7 +106,7 @@ export function Onboarding() {
     if (!step1Data || !step2Data || !user?.tenant_id) return
     setSubmitting(true)
     try {
-      await supabase.from('tenants').update({
+      await api.patch(`/tenants/${user.tenant_id}`, {
         name: step1Data.company_name,
         registered_address: step1Data.registered_address,
         primary_contact_name: step1Data.primary_contact_name,
@@ -114,9 +114,9 @@ export function Onboarding() {
         primary_contact_phone: step1Data.primary_contact_phone,
         type: step1Data.organisation_type,
         status: 'active',
-      }).eq('id', user.tenant_id)
+      })
 
-      const { data: event } = await supabase.from('events').insert({
+      const event = await api.post<{ id: string }>('/events', {
         tenant_id: user.tenant_id,
         name: step2Data.event_name,
         type: step2Data.event_type,
@@ -130,19 +130,21 @@ export function Onboarding() {
         police_liaison_name: step2Data.police_liaison_name ?? null,
         police_liaison_contact: step2Data.police_liaison_contact ?? null,
         status: 'planning',
-      }).select().single()
+      })
 
       if (step3Data?.contractors && event) {
-        await supabase.from('contractors').insert(
-          step3Data.contractors.filter(c => c.company_name).map(c => ({
-            tenant_id: user.tenant_id!,
-            event_id: event.id,
-            company_name: c.company_name,
-            type: c.type,
-            sia_licence_number: c.sia_licence_number || null,
-            primary_contact_name: c.primary_contact_name || null,
-            primary_contact_phone: c.primary_contact_phone || null,
-          }))
+        await Promise.all(
+          step3Data.contractors.filter(c => c.company_name).map(c =>
+            api.post('/contractors', {
+              tenant_id: user.tenant_id!,
+              event_id: event.id,
+              company_name: c.company_name,
+              type: c.type,
+              sia_licence_number: c.sia_licence_number || null,
+              primary_contact_name: c.primary_contact_name || null,
+              primary_contact_phone: c.primary_contact_phone || null,
+            })
+          )
         )
       }
 

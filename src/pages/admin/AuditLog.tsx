@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Table } from '../../components/ui/Table'
 import { Button } from '../../components/ui/Button'
 import { formatDateTime, exportCSV } from '../../lib/utils'
@@ -13,19 +13,11 @@ export function AdminAuditLog() {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['audit-log', fromDate, toDate],
-    queryFn: async () => {
-      let q = supabase
-        .from('audit_log')
-        .select('*, users(name, email), tenants(name)')
-        .order('created_at', { ascending: false })
-        .limit(500)
-
-      if (fromDate) q = q.gte('created_at', fromDate)
-      if (toDate) q = q.lte('created_at', toDate + 'T23:59:59')
-
-      const { data, error } = await q
-      if (error) throw error
-      return data ?? []
+    queryFn: () => {
+      const params = new URLSearchParams({ limit: '500' })
+      if (fromDate) params.set('from', fromDate)
+      if (toDate) params.set('to', toDate)
+      return api.get<Record<string, unknown>[]>(`/audit?${params}`)
     }
   })
 
@@ -33,8 +25,8 @@ export function AdminAuditLog() {
     exportCSV(
       logs.map((l: Record<string, unknown>) => ({
         timestamp: l.created_at,
-        user: (l.users as { email: string } | null)?.email ?? l.user_id,
-        tenant: (l.tenants as { name: string } | null)?.name ?? l.tenant_id,
+        user: (l.user_email as string) ?? l.user_id,
+        tenant: (l.tenant_name as string) ?? l.tenant_id,
         action: l.action,
         entity_type: l.entity_type,
         entity_id: l.entity_id,
@@ -71,8 +63,8 @@ export function AdminAuditLog() {
         data={logs as unknown as Record<string, unknown>[]}
         columns={[
           { key: 'created_at', header: 'Timestamp', sortable: true, render: (row) => formatDateTime(row.created_at as string) },
-          { key: 'user', header: 'User', render: (row) => (row.users as { email: string } | null)?.email ?? String(row.user_id ?? '—') },
-          { key: 'tenant', header: 'Tenant', render: (row) => (row.tenants as { name: string } | null)?.name ?? '—' },
+          { key: 'user_email', header: 'User', render: (row) => (row.user_email as string) ?? String(row.user_id ?? '—') },
+          { key: 'tenant_name', header: 'Tenant', render: (row) => (row.tenant_name as string) ?? '—' },
           { key: 'action', header: 'Action' },
           { key: 'entity_type', header: 'Entity type' },
         ]}

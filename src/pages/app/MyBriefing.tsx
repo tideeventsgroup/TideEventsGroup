@@ -1,12 +1,33 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Radio, Phone as PhoneIcon, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Radio, AlertTriangle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../contexts/AuthContext'
+import { api } from '../../lib/api'
+import type { Document } from '../../types'
+
+interface BriefingContent {
+  welcome?: string
+  role_overview?: string
+  command_structure?: string
+  key_procedures?: string
+  communication_channels?: string
+  key_contacts?: { name: string; role: string; phone: string }[]
+}
 
 export function MyBriefing() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const eventId = localStorage.getItem('tide_event_id') ?? ''
   const eventName = localStorage.getItem('tide_event_name') ?? 'Your event'
+
+  const { data: briefingDoc } = useQuery<Document | null>({
+    queryKey: ['briefing', eventId],
+    enabled: !!eventId,
+    queryFn: () => api.get<Document | null>(`/briefings?event_id=${eventId}`),
+  })
+
+  const briefing = briefingDoc?.content_json as BriefingContent | undefined
 
   return (
     <div className="min-h-screen bg-surface pb-8">
@@ -21,9 +42,7 @@ export function MyBriefing() {
         <section>
           <h2 className="text-sm font-semibold text-navy border-b border-gray-200 pb-2 mb-3">Welcome and event overview</h2>
           <p className="text-sm text-gray-700 leading-relaxed">
-            Welcome to <strong>{eventName}</strong>. Thank you for being part of the safety and security team for this event.
-            Your role is critical to ensuring the safety and wellbeing of everyone on site.
-            Please read this briefing carefully before your shift begins.
+            {briefing?.welcome ?? <>Welcome to <strong>{eventName}</strong>. Thank you for being part of the safety and security team for this event. Your role is critical to ensuring the safety and wellbeing of everyone on site. Please read this briefing carefully before your shift begins.</>}
           </p>
         </section>
 
@@ -32,7 +51,11 @@ export function MyBriefing() {
           <div className="bg-navy/5 rounded-lg p-4">
             <p className="text-sm text-navy font-medium">{user?.name ?? 'Staff member'}</p>
             <p className="text-xs text-gray-500 capitalize">{user?.role?.replace(/_/g, ' ')}</p>
-            <p className="text-xs text-gray-500 mt-1">Zone assignment will be confirmed by your supervisor at briefing.</p>
+            {briefing?.role_overview ? (
+              <p className="text-xs text-gray-600 mt-2">{briefing.role_overview}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Zone assignment will be confirmed by your supervisor at briefing.</p>
+            )}
           </div>
         </section>
 

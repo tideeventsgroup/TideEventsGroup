@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Building2 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { StatusBadge } from '../../components/ui/Badge'
 import { Table } from '../../components/ui/Table'
@@ -19,29 +19,19 @@ export function TenantDetail() {
 
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['tenant', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('tenants').select('*').eq('id', id!).single()
-      if (error) throw error
-      return data as Tenant
-    }
+    queryFn: () => api.get<Tenant>(`/tenants/${id}`)
   })
 
   const { data: events = [] } = useQuery({
     queryKey: ['tenant-events', id],
     enabled: tab === 'events',
-    queryFn: async () => {
-      const { data } = await supabase.from('events').select('*').eq('tenant_id', id!).order('start_date', { ascending: false })
-      return (data ?? []) as Event[]
-    }
+    queryFn: () => api.get<Event[]>(`/events?tenant_id=${id}`)
   })
 
   const { data: users = [] } = useQuery({
     queryKey: ['tenant-users', id],
     enabled: tab === 'users',
-    queryFn: async () => {
-      const { data } = await supabase.from('users').select('*').eq('tenant_id', id!)
-      return (data ?? []) as User[]
-    }
+    queryFn: () => api.get<User[]>(`/users?tenant_id=${id}`)
   })
 
   if (isLoading) return <LoadingSpinner />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { formatDate } from '../../lib/utils'
 import type { Event } from '../../types'
@@ -16,13 +16,13 @@ export function SelectEvent() {
     queryKey: ['app-events', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .eq('tenant_id', user!.tenant_id!)
-        .in('status', ['live', 'planning', 'documentation', 'pre_event_review'])
-        .order('start_date')
-      return (data ?? []) as Event[]
+      const params = new URLSearchParams()
+      params.set('tenant_id', user!.tenant_id!)
+      params.append('status', 'live')
+      params.append('status', 'planning')
+      params.append('status', 'documentation')
+      params.append('status', 'pre_event_review')
+      return api.get<Event[]>(`/events?${params}`)
     }
   })
 

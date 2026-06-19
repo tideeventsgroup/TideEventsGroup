@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Download, History, FileText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Table } from '../../components/ui/Table'
 import { Button } from '../../components/ui/Button'
 import { StatusBadge } from '../../components/ui/Badge'
@@ -42,14 +42,13 @@ export function DocumentVault() {
     queryKey: ['documents', user?.tenant_id],
     enabled: !!user?.tenant_id,
     queryFn: async () => {
-      const { data } = await supabase.from('documents').select('*').eq('tenant_id', user!.tenant_id!).order('created_at', { ascending: false })
-      return (data ?? []) as Document[]
+      return api.get<Document[]>(`/documents?tenant_id=${user!.tenant_id!}`)
     }
   })
 
   const createDoc = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('documents').insert({
+      await api.post('/documents', {
         tenant_id: user!.tenant_id!,
         title: newTitle,
         type: newType,
@@ -58,7 +57,6 @@ export function DocumentVault() {
         content_json: {},
         created_by: user!.id,
       })
-      if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['documents'] }); setAddOpen(false); setNewTitle('') }
   })
